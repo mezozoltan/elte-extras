@@ -24,7 +24,7 @@ Mozilla útmutató: https://extensionworkshop.com/documentation/develop/temporar
 - Frissítés UUID-változáskor és nyitott, látható lapon 30 másodpercenként, illetve a ↻ gombbal.
 - A jelszót nem kéri el. A szerkesztő bejelentkezett munkamenetét használja. A rövid életű hozzáférési tokent nem tárolja.
 - Csak a panel nyitott/csukott állapotát menti a bővítmény helyi tárolójába. A mentéslistát kizárólag memóriában tartja.
-- Kizárólag olvasási kérések: `GET :3000/me`, majd `GET :3001/structograms` a `webprogramozas.inf.elte.hu` szerveren. Nincs külső telemetria, mentés vagy törlés.
+- Az előzményekhez olvasási kéréseket használ: `GET :3000/me`, majd `GET :3001/structograms` a `webprogramozas.inf.elte.hu` szerveren. Az első mentés megerősítésekor a szerkesztő saját mentési műveletét indítja el, amely a szokásos `POST /structograms` kérést küldi. Nincs telemetria vagy törlés.
 
 ## Ellenőrzési korlát
 
@@ -32,11 +32,13 @@ A felület és adatkezelés szimulált API-válaszokkal ellenőrzött. Bejelentk
 
 Ha nem jelenik meg a gomb, töltsd újra az oldalt, és ellenőrizd, hogy a kiegészítő hozzáférhet-e a Stuki webhelyhez.
 
-## Frissítés 1.2.0-ra
+## Frissítés 1.3.0-ra
 
 Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` oldalon nyomd meg az **Újratöltés / Reload** gombot, majd töltsd újra a Stuki lapot. Ha ZIP-ből telepítetted, távolítsd el az ideiglenes régi példányt, és töltsd be az új ZIP-et.
 
 ## Elnevezések
+
+Új dokumentumon a **Save** gomb vagy a **Ctrl+S** névadó ablakot nyit. A **Mentés** vagy Enter előbb átnevezi az első függvényt, majd a szerkesztő saját mentését indítja el. A **Mégse** vagy Escape nem ment. Üres nevet nem fogad el. A későbbi verziómentések már nem kérnek nevet.
 
 A `Main` a kezdeti struktogram alapértelmezett függvényneve. A Stuki mentéskor a teljes állapotot küldi, így a `data.structograms[].name` mezőben más név is megmarad. A diagram fölötti F művelet bekapcsolja a szerkeszthető függvényfejlécet; átírás és Save után a History ezt a nevet használja. Az eredeti klienssel, elfogott tesztkérésben igazoltuk a név megőrzését, éles írás nélkül.
 

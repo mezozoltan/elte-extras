@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Stuki History",
-  "version": "1.2.0",
-  "description": "Mentett Stuki-struktogramok és korábbi verzióik oldalsó History panelen.",
+  "version": "1.3.0",
+  "description": "Mentési előzmények és névadás az új Stuki-struktogramok első mentésekor.",
   "permissions": [
     "storage"
   ],

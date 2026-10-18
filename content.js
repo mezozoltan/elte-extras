@@ -18,7 +18,7 @@
     .heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
     h2 { font-size:16px; font-weight:400; margin:0; }
     .tools { padding:10px 12px; display:flex; gap:5px; background:var(--sh-menu,#e0d8ba); color:#000; }
-    input { min-width:0; width:100%; border:1px solid #888; border-radius:3px; padding:5px 7px; background:var(--sh-menu,#e0d8ba); color:var(--struct-text-color,#000); }
+    input { min-width:0; width:100%; border:1px solid #888; border-radius:3px; padding:5px 7px; background:var(--sh-menu,#e0d8ba); color:#000; }
     #refresh { padding:4px 9px; }
     #status { padding:8px 12px; font-size:12px; opacity:.8; white-space:pre-line; overflow-wrap:anywhere; }
     #status.error { color:var(--sh-error,#c74747); opacity:1; }
@@ -35,6 +35,12 @@
     summary { cursor:pointer; font-size:12px; }
     .old { margin-top:5px; padding-left:7px; border-left:2px solid var(--sh-border,#b679b6); }
     .empty { opacity:.75; padding:16px 5px; }
+    dialog { width:360px; max-width:calc(100vw - 32px); margin:auto; padding:18px; border:1px solid #888; border-radius:5px; background:var(--sh-menu,#e0d8ba); color:#000; font:inherit; }
+    dialog::backdrop { background:#0007; }
+    dialog h2 { margin-bottom:14px; font-weight:700; }
+    dialog label { display:block; margin-bottom:6px; }
+    .dialog-actions { display:flex; justify-content:flex-end; gap:6px; margin-top:16px; }
+    #name-error { color:#a21d1d; margin:8px 0 0; font-size:12px; }
   `;
   shadow.append(style);
   // Static markup only. API fields below are always inserted with textContent.
@@ -43,7 +49,16 @@
       <header><div class="heading"><h2>History</h2></div></header>
       <div class="tools"><input id="search" type="search" placeholder="Keresés a mentésekben…" aria-label="Mentések keresése"><button id="refresh" title="Mentések frissítése" aria-label="Mentések frissítése">↻</button></div>
       <div id="status" role="status" aria-live="polite"></div><div id="list"></div>
-    </section>`;
+    </section>
+    <dialog id="name-dialog" aria-labelledby="name-title" lang="hu">
+      <form id="name-form">
+        <h2 id="name-title">Struktogram mentése</h2>
+        <label for="save-name">Név</label>
+        <input id="save-name" type="text" required maxlength="200" autocomplete="off" placeholder="Add meg a struktogram nevét…">
+        <p id="name-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button id="name-cancel" type="button">Mégse</button><button id="name-submit" type="submit">Mentés</button></div>
+      </form>
+    </dialog>`;
   shadow.append(template.content.cloneNode(true));
   document.body.append(host);
   const layout = document.createElement("style");
@@ -55,6 +70,89 @@
   `;
   document.head.append(layout);
   const $ = id => shadow.getElementById(id);
+  const nameDialog = $("name-dialog");
+  let replayingSave = false, applyingName = false;
+  function nativeSave() {
+    return [...document.querySelectorAll('#app header > nav button,#app header > nav input[type="button"]')]
+      .find(element => /^Save(?:\s|$)/.test(element.value || element.textContent || ""));
+  }
+  function firstDiagram() { return document.querySelector("#app .structogram-editor .structogram"); }
+  const nextRender = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  async function revealName(diagram) {
+    const control = diagram.querySelector('[title="Show/hide function header"]');
+    if (!control) throw new Error("A függvénynév szerkesztője nem található. Töltsd újra a Stuki oldalt.");
+    const wasHidden = !diagram.querySelector('.header-container .header[contenteditable="true"]');
+    if (wasHidden) { control.click(); await nextRender(); }
+    const field = diagram.querySelector('.header-container .header[contenteditable="true"]');
+    if (!field) throw new Error("A függvénynév nem szerkeszthető ezen az oldalon.");
+    return {field, control, wasHidden};
+  }
+  function showNameDialog() {
+    if (nameDialog.open) { $("save-name").focus(); return; }
+    const current = firstDiagram()?.querySelector('.header-container .header[contenteditable="true"]')?.textContent?.trim();
+    $("save-name").value = current && current !== "Main" ? current : "";
+    $("save-name").setCustomValidity("");
+    $("name-error").hidden = true;
+    nameDialog.showModal();
+    $("save-name").focus();
+    $("save-name").select();
+  }
+  // Let the editor perform the save itself, preserving authentication, version
+  // linking, styling settings, and its existing failure behavior.
+  document.addEventListener("click", event => {
+    if (replayingSave || new URL(location.href).searchParams.get("uuid")) return;
+    const save = nativeSave();
+    if (!save || !event.composedPath().includes(save)) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    showNameDialog();
+  }, true);
+  window.addEventListener("keydown", event => {
+    if (!event.ctrlKey || event.key.toLowerCase() !== "s") return;
+    if (!nameDialog.open && event.composedPath().includes(host)) return;
+    if (!nameDialog.open && new URL(location.href).searchParams.get("uuid")) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (nativeSave() && !nameDialog.open) showNameDialog();
+  }, true);
+  nameDialog.addEventListener("keydown", event => event.stopPropagation());
+  nameDialog.addEventListener("close", () => nativeSave()?.focus());
+  nameDialog.addEventListener("cancel", event => { if (applyingName) event.preventDefault(); });
+  $("name-cancel").addEventListener("click", () => { if (!applyingName) nameDialog.close(); });
+  $("save-name").addEventListener("input", () => $("save-name").setCustomValidity(""));
+  $("name-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    if (applyingName) return;
+    const name = $("save-name").value.trim();
+    if (!name) {
+      $("save-name").setCustomValidity("Adj meg egy nevet.");
+      $("save-name").reportValidity(); return;
+    }
+    applyingName = true;
+    $("name-submit").disabled = true; $("name-cancel").disabled = true;
+    $("name-error").hidden = true;
+    try {
+      const diagram = firstDiagram();
+      if (!diagram) throw new Error("Nincs menthető struktogram.");
+      const {field, control, wasHidden} = await revealName(diagram);
+      try {
+        field.textContent = name;
+        field.dispatchEvent(new Event("input", {bubbles:true, composed:true}));
+        await nextRender();
+      } finally {
+        if (wasHidden) { control.click(); await nextRender(); }
+      }
+      const save = nativeSave();
+      if (!save || save.disabled) throw new Error("A mentés gomb nem elérhető. Próbáld újra.");
+      replayingSave = true;
+      try { save.click(); } finally { replayingSave = false; }
+      nameDialog.close();
+    } catch (error) {
+      $("name-error").textContent = error.message;
+      $("name-error").hidden = false;
+    } finally {
+      applyingName = false;
+      $("name-submit").disabled = false; $("name-cancel").disabled = false;
+    }
+  });
   const toggleWrap = document.createElement("div");
   toggleWrap.id = "stuki-history-control";
   const toggle = document.createElement("button");
