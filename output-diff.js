@@ -7,7 +7,7 @@
     const hu = language === 'hu';
     if (!character) return hu ? 'kimenet vége' : 'end of output';
     const names = {
-      ' ':hu?'szóköz (␠)':'space (␠)', '\n':hu?'sortörés (\\n)':'newline (\\n)',
+      ' ':hu?'szóköz':'space', '\n':hu?'sortörés (\\n)':'newline (\\n)',
       '\r':hu?'kocsivissza (\\r)':'carriage return (\\r)', '\t':hu?'tabulátor (\\t)':'tab (\\t)',
       '\u00A0':hu?'nem törhető szóköz (U+00A0)':'non-breaking space (U+00A0)',
       '\u200B':hu?'zérószélességű szóköz (U+200B)':'zero-width space (U+200B)',
