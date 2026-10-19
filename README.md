@@ -20,10 +20,10 @@ A Firefox extension for [ELTE's Stuki editor](https://progalap.elte.hu/stuki/) a
 
 Requires Firefox 128 or later. This is an unsigned development extension.
 
-1. Download [stuki-history-1.4.0.zip](packages/stuki-history-1.4.0.zip) using GitHub's **Download raw file** control, or clone the repository.
+1. Download [stuki-history-1.4.1.zip](packages/stuki-history-1.4.1.zip) using GitHub's **Download raw file** control, or clone the repository.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and choose the ZIP, or choose `manifest.json` from the cloned repository.
-4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically below **Kurzusok** in the sidebar. Allow the extension access to Progenv if Firefox requests it.
+4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically in a separate section below **Rólunk** in the sidebar. Allow the extension access to Progenv if Firefox requests it.
 
 Click History again, or press Escape inside the panel, to close it. Temporary add-ons are removed when Firefox restarts. Persistent installation in standard Firefox requires Mozilla signing; the included package is not signed.
 
@@ -35,9 +35,9 @@ To update a temporary installation, reload it in `about:debugging` if loading un
 
 ![Progenv sidebar example with synthetic data](docs/progenv-preview.png)
 
-The extension reads your course list using your current Progenv session, follows each course to its group page or group list, and shows compact topic links in the existing sidebar. For example, **Programozás · 20.cs.** expands to show that group's topics plus course-level topics such as beadandók. The heading toggles the dropdown; it starts open unless you previously collapsed it.
+The extension reads your course list using your current Progenv session, follows each course to its group page or group list, and shows compact topic links in a separate section below the three original navigation items (Kurzusok, Feladattár, Rólunk). For example, **Programozás · 20.cs.** expands to show that group's topics plus course-level topics such as beadandók. The heading toggles the dropdown; it starts open unless you previously collapsed it.
 
-Topic rows show the name, completion percentage when supplied by the site, task count, and deadline. Original topic names and order are preserved. Course codes are removed from the compact heading. Direct links preserve the current Hungarian or English locale. No group ID or personal course list is hardcoded.
+Topic rows show the name, completion percentage when supplied by the site, task count, and deadline. Original topic names are preserved. Topics with upcoming deadlines appear first, earliest deadline first; recently expired items follow, then undated items in their original order. A closing date is used when the topic has no separate deadline. Course codes are removed from the compact heading. Direct links preserve the current Hungarian or English locale. No group ID or personal course list is hardcoded.
 
 The extension uses only same-origin GET requests for course and group pages; it does not open task pages in the background or submit work. It refreshes every five minutes while the page is visible. Course data and progress remain in memory, and are cleared when navigating to the login/logout page. Only collapsed dropdown identifiers are saved as display preferences.
 

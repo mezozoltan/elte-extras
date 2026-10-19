@@ -9,7 +9,7 @@
   let controller = null, collapsed = {}, errorText = "", generation = 0;
   const style = document.createElement('style');
   style.textContent = `
-    .progenv-quick-courses { color:var(--sidebar-foreground,inherit); font:inherit; padding:2px 0 5px; min-width:0; }
+    .progenv-quick-courses { color:var(--sidebar-foreground,inherit); font:inherit; margin-top:8px; padding:8px 0 5px; border-top:1px solid var(--sidebar-border,#8884); min-width:0; }
     .progenv-quick-courses * { box-sizing:border-box; }
     .progenv-quick-courses details { margin:2px 0 5px; }
     .progenv-quick-courses summary { display:flex; align-items:center; gap:5px; min-height:32px; padding:5px 7px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; list-style:none; }
@@ -54,7 +54,7 @@
       summary.append(element('span','progenv-course-name',record.courseName),element('span','progenv-group-number',record.label));
       details.append(summary);
       const list = element('ul','progenv-topic-list');
-      for (const topic of record.topics) {
+      for (const topic of model.sortTopics(record.topics)) {
         const item = element('li');
         const anchor = element('a','progenv-topic'); anchor.href = topic.url;
         const current = model.route(location.href,location.href,locale());
@@ -110,12 +110,13 @@
       if (!link) continue;
       let root = roots.get(area);
       if (!root) {
-        root = element('li','progenv-quick-courses'); root.dataset.progenvQuickCourses = '';
+        root = element('section','progenv-quick-courses'); root.dataset.progenvQuickCourses = '';
+        root.setAttribute('aria-label',translate('Kurzusok témakörei','Course topics'));
         roots.set(area,root); draw(root);
       }
-      const row = link.closest('li');
-      if (row && row.nextElementSibling !== root) row.after(root);
-      else if (!row && !root.isConnected) area.append(root);
+      const navigation = link.closest('[data-sidebar="menu"]') || link.closest('ul');
+      if (navigation && navigation.nextElementSibling !== root) navigation.after(root);
+      else if (!navigation && !root.isConnected) area.append(root);
     }
     if (roots.size && !loaded && !loading && Date.now()-lastAttempt > 30000) refresh();
   }

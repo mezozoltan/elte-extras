@@ -9,6 +9,14 @@ assert.equal(model.groupLabel('20. csoport'),'20.cs.');
 assert.equal(model.route('/courses/1/groups/20/topics/2').url,'https://progenv.inf.elte.hu/hu/courses/1/groups/20/topics/2');
 assert.equal(model.route('https://example.com/courses/1'),null);
 assert.equal(model.route('javascript:alert(1)'),null);
+assert.equal(model.deadlineTime('Határidő: 2026. 10. 27.'),new Date(2026,9,27,23,59,59,999).getTime());
+assert.equal(model.deadlineTime('Lezárva ekkor: 2026. 10. 27. 12:30'),new Date(2026,9,27,12,30,0,0).getTime());
+assert.equal(model.deadlineTime('Due: 10/27/2026','en'),new Date(2026,9,27,23,59,59,999).getTime());
+assert.equal(model.deadlineTime('Határidő: 2026. 02. 30.'),null);
+const orderFixture = [{name:'undated',expiresAt:null},{name:'late',expiresAt:300},{name:'older overdue',expiresAt:10},
+  {name:'soon',expiresAt:200},{name:'recent overdue',expiresAt:99},{name:'another undated',expiresAt:null}];
+assert.deepEqual(model.sortTopics(orderFixture,100).map(x=>x.name),['soon','late','recent overdue','older overdue','undated','another undated']);
+assert.equal(orderFixture[0].name,'undated');
 
 const card = (href,name,score,count,deadline='') => `<div data-slot="card"><a href="${href}"><h3>${name}</h3></a><div aria-label="Score ${score}%">${score}%</div><span>${count} feladat</span>${deadline?`<span>Határidő: ${deadline}</span>`:''}</div>`;
 const coursesFixture = '<main><h1>Kurzusok</h1><div data-slot="card"><a href="/courses/1">IP-18PROGEG - Programozás</a></div></main>';
@@ -74,6 +82,10 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     assert.equal(await detail.getAttribute('open'),'');
     assert.equal(await page.locator('.progenv-course-name').innerText(),'Programozás');
     assert.equal(await page.locator('.progenv-group-number').innerText(),'20.cs.');
+    assert.equal(await page.locator('.progenv-quick-courses').evaluate(root => root.tagName),'SECTION');
+    assert.equal(await page.locator('.progenv-quick-courses').evaluate(root => root.previousElementSibling?.getAttribute('data-sidebar')),'menu');
+    assert.deepEqual(await page.locator('[data-sidebar="content"] > [data-sidebar="menu"] > li > a').allTextContents(),['Kurzusok','Feladattár','Rólunk']);
+    assert.equal(await page.locator('.progenv-topic').first().getAttribute('href'),'https://progenv.inf.elte.hu/hu/courses/1/topics/1');
     assert.equal(await page.locator('.progenv-topic[href$="/courses/1/topics/1"]').count(),1);
     assert.equal(await page.locator('.progenv-topic-score[data-result="incomplete"]').count(),1);
     assert.match(await page.locator('.progenv-topic').last().getAttribute('title'),/feladat/);

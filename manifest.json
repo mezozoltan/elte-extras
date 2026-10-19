@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Stuki History",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Stuki mentési előzmények és névadás, Progenv kurzusok és témakörök közvetlenül az oldalsávban.",
   "permissions": [
     "storage"
