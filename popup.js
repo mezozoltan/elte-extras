@@ -2,6 +2,12 @@
   'use strict';
   const inputs = [...document.querySelectorAll('input[type="checkbox"]')];
   const status = document.getElementById('status');
+  const detailsToggle = document.getElementById('details-toggle');
+  detailsToggle.addEventListener('click', () => {
+    const details = document.getElementById('details');
+    details.hidden = !details.hidden;
+    detailsToggle.setAttribute('aria-expanded',String(!details.hidden));
+  });
   try {
     const {siteEnabled = {}} = await browser.storage.local.get('siteEnabled');
     for (const input of inputs) { input.checked = siteEnabled[input.name] !== false; input.disabled = false; }
@@ -16,7 +22,7 @@
     try {
       const {siteEnabled = {}} = await browser.storage.local.get('siteEnabled');
       await browser.storage.local.set({siteEnabled:{...siteEnabled,[input.name]:checked}});
-      status.textContent = 'Mentve. Töltsd újra az érintett oldalt.';
+      status.textContent = '';
     } catch {
       input.checked = !checked;
       status.textContent = 'Nem sikerült menteni. Próbáld újra.';

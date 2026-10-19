@@ -6,6 +6,8 @@ A Firefox extension for [ELTE's Stuki editor](https://progalap.elte.hu/stuki/), 
 
 Click the extension’s toolbar icon to enable or disable changes separately for Stuki, Specifikáció, and Progenv. All sites start enabled. Reload an affected page after changing its checkbox; pages are never reloaded automatically. Disabled sites run none of the extension’s UI or data requests. Settings are saved locally.
 
+The menu shows each site's favicon beside its name, with switches on the right. **Részletek** expands the full list of changes. Struktogram and Specifikáció use custom tab icons; disabling a site restores its original icon after reloading.
+
 ## Features
 
 - History toggle beside the editor's Theme button, styled by the site's own CSS.
@@ -25,7 +27,7 @@ Click the extension’s toolbar icon to enable or disable changes separately for
 
 Requires Firefox 128 or later. This is an unsigned development extension.
 
-1. Download [elte-extras-1.9.1.zip](packages/elte-extras-1.9.1.zip) using GitHub's **Download raw file** control, or clone the repository.
+1. Download [elte-extras-1.10.0.zip](packages/elte-extras-1.10.0.zip) using GitHub's **Download raw file** control, or clone the repository.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and choose the ZIP, or choose `manifest.json` from the cloned repository.
 4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically in a separate section below **Rólunk** in the sidebar. Allow the extension access to Progenv if Firefox requests it.

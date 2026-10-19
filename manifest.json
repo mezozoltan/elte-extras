@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ELTE Extras",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "description": "Stuki-előzmények, Progenv-oldalsáv és kimeneteltérés-jelzések, átméretezhető Speci-panelek.",
   "permissions": [
     "storage"
@@ -18,7 +18,8 @@
       ],
       "js": [
         "model.js",
-        "content.js"
+        "content.js",
+        "site-favicon.js"
       ],
       "run_at": "document_idle"
     },
@@ -40,7 +41,8 @@
         "https://progalap.elte.hu/specifikacio/*"
       ],
       "js": [
-        "spec-resize.js"
+        "spec-resize.js",
+        "site-favicon.js"
       ],
       "run_at": "document_idle"
     }
@@ -59,5 +61,16 @@
   "action": {
     "default_title": "ELTE Extras – Webhelyek",
     "default_popup": "popup.html"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/struktogram.png",
+        "icons/specifikacio.png"
+      ],
+      "matches": [
+        "https://progalap.elte.hu/*"
+      ]
+    }
+  ]
 }

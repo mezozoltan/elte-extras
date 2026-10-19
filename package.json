@@ -1,6 +1,6 @@
 {
   "name": "elte-extras",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "private": true,
   "description": "Firefox extension with extras for ELTE Stuki, Specifikáció, and Progenv",
   "scripts": {
@@ -10,7 +10,8 @@
     "test:spec": "node tests/spec-resize.test.cjs",
     "test:output": "node tests/output-diff.test.cjs",
     "test:output-ui": "node tests/output-hints.test.cjs",
-    "test:settings": "node tests/site-settings.test.cjs"
+    "test:settings": "node tests/site-settings.test.cjs",
+    "test:favicon": "node tests/site-favicon.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

@@ -1,10 +1,17 @@
 :root { color-scheme:light dark; font:14px/1.45 system-ui,sans-serif; }
-body { width:270px; margin:0; padding:16px; background:Canvas; color:CanvasText; }
+body { width:280px; max-height:500px; overflow-y:auto; margin:0; padding:16px; background:Canvas; color:CanvasText; }
 h1 { font-size:16px; margin:0 0 12px; }
 form { display:grid; gap:4px; }
 label { display:flex; align-items:center; gap:10px; padding:8px; border-radius:6px; cursor:pointer; user-select:none; }
 label:hover { background:color-mix(in srgb,CanvasText 8%,Canvas); }
-input { width:16px; height:16px; margin:0; accent-color:#8a428a; }
-small { display:block; opacity:.65; font-size:11px; }
+label img { width:16px; height:16px; flex:none; object-fit:contain; }
+label span { flex:1; }
+input { width:16px; height:16px; margin:0; flex:none; accent-color:#8a428a; }
+#details-toggle { display:block; width:100%; margin-top:12px; padding:7px 10px; border:1px solid color-mix(in srgb,CanvasText 25%,Canvas); border-radius:6px; background:Canvas; color:CanvasText; font:inherit; cursor:pointer; }
+#details-toggle:hover { background:color-mix(in srgb,CanvasText 8%,Canvas); }
+#details { border-top:1px solid color-mix(in srgb,CanvasText 15%,Canvas); margin-top:14px; }
+h2 { font-size:13px; margin:14px 0 6px; }
+ul { padding-left:18px; margin:0; font-size:12px; }
+li + li { margin-top:5px; }
 p { font-size:12px; opacity:.75; margin:12px 0 0; }
 #status:empty { display:none; }
