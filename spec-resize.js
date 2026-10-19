@@ -35,7 +35,6 @@
   divider.setAttribute('role','separator');
   divider.setAttribute('aria-orientation','vertical');
   divider.setAttribute('aria-label','Resize Specification and Data panels');
-  divider.title = 'Drag to resize · Arrow keys to adjust · Double-click to reset';
   if (!left.id) left.id = 'spec-left-panels';
   divider.setAttribute('aria-controls',left.id+' '+data.id);
   row.insertBefore(divider,data);
@@ -121,7 +120,6 @@
     visualizationDivider.setAttribute('aria-orientation','horizontal');
     visualizationDivider.setAttribute('aria-label','Resize Specification and Visualization panels');
     visualizationDivider.setAttribute('aria-controls',editor.id+' '+visualization.id);
-    visualizationDivider.title = 'Drag to resize · Up/Down to adjust · Double-click to reset';
     left.insertBefore(visualizationDivider,visualization);
     left.classList.add('spec-resizable-stack');
     visualizationDivider.addEventListener('pointerdown',event => {
