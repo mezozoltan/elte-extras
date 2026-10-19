@@ -5,7 +5,8 @@ const {chromium} = require('playwright');
 const model = require('../progenv-model.js');
 const root = path.resolve(__dirname,'..');
 assert.equal(model.courseName('IP-18PROGEG - Programozás'),'Programozás');
-assert.equal(model.groupLabel('20. csoport'),'20.cs.');
+assert.equal(model.groupLabel('20. csoport'),'20. csoport');
+assert.equal(model.groupLabel('20. csoport – Labor'),'20. csoport – Labor');
 assert.equal(model.route('/courses/1/groups/20/topics/2').url,'https://progenv.inf.elte.hu/hu/courses/1/groups/20/topics/2');
 assert.equal(model.route('https://example.com/courses/1'),null);
 assert.equal(model.route('javascript:alert(1)'),null);
@@ -81,7 +82,7 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     const detail = page.locator('.progenv-quick-courses details').first();
     assert.equal(await detail.getAttribute('open'),'');
     assert.equal(await page.locator('.progenv-course-name').innerText(),'Programozás');
-    assert.equal(await page.locator('.progenv-group-number').innerText(),'20.cs.');
+    assert.equal(await page.locator('.progenv-group-number').innerText(),'20. csoport');
     assert.equal(await page.locator('.progenv-quick-courses').evaluate(root => root.tagName),'SECTION');
     assert.equal(await page.locator('.progenv-quick-courses').evaluate(root => root.previousElementSibling?.getAttribute('data-sidebar')),'menu');
     assert.deepEqual(await page.locator('[data-sidebar="content"] > [data-sidebar="menu"] > li > a').allTextContents(),['Kurzusok','Feladattár','Rólunk']);
@@ -115,7 +116,7 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     await page.waitForFunction(() => document.querySelectorAll('.progenv-topic').length >= 3);
     mode = 'groups'; await load();
     await page.waitForFunction(() => document.querySelectorAll('.progenv-quick-courses details').length === 2);
-    assert.equal(await page.locator('.progenv-group-number').last().innerText(),'21.cs.');
+    assert.equal(await page.locator('.progenv-group-number').last().innerText(),'21. csoport');
     mode = 'error'; await load();
     await page.getByRole('button',{name:'Újrapróbálás'}).waitFor();
     mode = 'normal'; await page.getByRole('button',{name:'Újrapróbálás'}).click();

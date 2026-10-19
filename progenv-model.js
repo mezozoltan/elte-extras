@@ -17,9 +17,7 @@
     return name.replace(/^[\w-]+\s+[-–]\s+/,"");
   }
   function groupLabel(value) {
-    const name = clean(value);
-    const match = name.match(/(?:^|\s)(\d+)\.?\s*(?:csoport|group)\b/i) || name.match(/^group\s+(\d+)$/i);
-    return match ? match[1]+".cs." : name;
+    return clean(value);
   }
   function deadlineTime(value, locale = 'hu') {
     const text = clean(value);

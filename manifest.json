@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Stuki History",
-  "version": "1.4.1",
-  "description": "Stuki mentési előzmények és névadás, Progenv kurzusok és témakörök közvetlenül az oldalsávban.",
+  "version": "1.5.0",
+  "description": "Stuki előzmények és névadás, Progenv kurzus-oldalsáv, átméretezhető Speci-panelek.",
   "permissions": [
     "storage"
   ],
@@ -29,6 +29,16 @@
       "js": [
         "progenv-model.js",
         "progenv.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://progalap.elte.hu/specifikacio",
+        "https://progalap.elte.hu/specifikacio/*"
+      ],
+      "js": [
+        "spec-resize.js"
       ],
       "run_at": "document_idle"
     }

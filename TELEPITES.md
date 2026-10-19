@@ -32,7 +32,7 @@ A felület és adatkezelés szimulált API-válaszokkal ellenőrzött. Bejelentk
 
 Ha nem jelenik meg a gomb, töltsd újra az oldalt, és ellenőrizd, hogy a kiegészítő hozzáférhet-e a Stuki webhelyhez.
 
-## Frissítés 1.4.1-re
+## Frissítés 1.5.0-ra
 
 Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` oldalon nyomd meg az **Újratöltés / Reload** gombot, majd töltsd újra a Stuki lapot. Ha ZIP-ből telepítetted, távolítsd el az ideiglenes régi példányt, és töltsd be az új ZIP-et.
 
@@ -46,8 +46,12 @@ A Speci ettől eltérően külön, felső szintű `name` mezőt is küld. A Stuk
 
 ## Progenv oldalsáv
 
-A kiegészítő a https://progenv.inf.elte.hu/ oldalon is működik. Bejelentkezés után a három eredeti menüpont után, a **Rólunk** alatt külön szakaszban automatikusan megjelenik minden elérhető kurzus és csoport, például **Programozás · 20.cs.**. Az alapértelmezetten nyitott legördülőben közvetlen témakörlinkek, feladatszámok, teljesítési arányok és határidők láthatók. A fejlécére kattintva bezárható; ezt a beállítást megjegyzi. A megjelenés a Progenv saját oldalsávszíneit használja.
+A kiegészítő a https://progenv.inf.elte.hu/ oldalon is működik. Bejelentkezés után a három eredeti menüpont után, a **Rólunk** alatt külön szakaszban automatikusan megjelenik minden elérhető kurzus és csoport, például **Programozás · 20. csoport**. Az alapértelmezetten nyitott legördülőben közvetlen témakörlinkek, feladatszámok, teljesítési arányok és határidők láthatók. A fejlécére kattintva bezárható; ezt a beállítást megjegyzi. A megjelenés a Progenv saját oldalsávszíneit használja.
 
 Frissítés után töltsd újra a Progenv lapot is; ha a Firefox kéri, engedélyezd a hozzáférést ehhez a webhelyhez. A kiegészítő csak olvassa a kurzus- és csoportoldalakat a meglévő bejelentkezett munkamenettel, és ötpercenként frissít a látható lapon. Nem küld be feladatot, és nem tárolja tartósan a kurzusadatokat vagy eredményeket. A helyi tárolóba csak az összecsukott kurzus/csoport azonosítója kerül megjelenítési beállításként.
 
 A témakörök a legközelebbi jövőbeli határidő szerint rendezve jelennek meg. Ezeket a már lejárt, majd a határidő nélküli témakörök követik. Ha külön határidő nincs megadva, a lezárás dátumát használja.
+
+## Átméretezhető Speci-panelek
+
+A https://progalap.elte.hu/specifikacio/ oldalon az 1. Specification és a 2. Data oszlop közötti elválasztó húzható. A szélességarányt megjegyzi. Dupla kattintással visszaállítható, fókuszban a bal/jobb nyíl, Shift+nyíl, Home és End billentyűkkel állítható. A Visualization kikapcsolásakor is működik. Ha a Data panelt kapcsolod ki, az elválasztó eltűnik, a megmaradt panel pedig kitölti a helyet; visszakapcsoláskor a korábbi arány visszaáll. Nem módosítja a dokumentumot és nem küld hálózati kérést.

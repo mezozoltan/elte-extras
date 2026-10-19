@@ -19,7 +19,7 @@
     .progenv-quick-courses summary:hover,.progenv-quick-courses a:hover { background:var(--sidebar-accent,#8882); color:var(--sidebar-accent-foreground,inherit); }
     .progenv-quick-courses summary:focus-visible,.progenv-quick-courses a:focus-visible,.progenv-quick-courses button:focus-visible { outline:2px solid var(--sidebar-ring,#888); outline-offset:-2px; }
     .progenv-course-name { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .progenv-group-number { flex:none; font-size:11px; font-weight:500; color:var(--muted-foreground,#888); }
+    .progenv-group-number { flex:0 1 auto; max-width:55%; text-align:right; overflow-wrap:anywhere; font-size:11px; font-weight:500; color:var(--muted-foreground,#888); }
     .progenv-topic-list { margin:2px 0 0 12px; padding:0 0 0 7px; border-left:1px solid var(--sidebar-border,#8884); list-style:none; }
     .progenv-quick-courses .progenv-topic { display:block; border-radius:5px; padding:6px 5px; margin:1px 0; text-decoration:none; color:inherit; }
     .progenv-quick-courses .progenv-topic[aria-current="page"] { background:var(--sidebar-accent,#8882); color:var(--sidebar-accent-foreground,inherit); }
