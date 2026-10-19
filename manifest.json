@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Stuki History",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "description": "Stuki előzmények és névadás, Progenv kurzus-oldalsáv, átméretezhető Speci-panelek.",
   "permissions": [
     "storage"

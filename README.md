@@ -22,7 +22,7 @@ A Firefox extension for [ELTE's Stuki editor](https://progalap.elte.hu/stuki/), 
 
 Requires Firefox 128 or later. This is an unsigned development extension.
 
-1. Download [stuki-history-1.5.0.zip](packages/stuki-history-1.5.0.zip) using GitHub's **Download raw file** control, or clone the repository.
+1. Download [stuki-history-1.7.0.zip](packages/stuki-history-1.7.0.zip) using GitHub's **Download raw file** control, or clone the repository.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and choose the ZIP, or choose `manifest.json` from the cloned repository.
 4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically in a separate section below **Rólunk** in the sidebar. Allow the extension access to Progenv if Firefox requests it.
@@ -39,9 +39,9 @@ To update a temporary installation, reload it in `about:debugging` if loading un
 
 The extension reads your course list using your current Progenv session, follows each course to its group page or group list, and shows compact topic links in a separate section below the three original navigation items (Kurzusok, Feladattár, Rólunk). For example, **Programozás · 20. csoport** expands to show that group's topics plus course-level topics such as beadandók. The heading toggles the dropdown; it starts open unless you previously collapsed it.
 
-Topic rows show the name, completion percentage when supplied by the site, task count, and deadline. Original topic names are preserved. Topics with upcoming deadlines appear first, earliest deadline first; recently expired items follow, then undated items in their original order. A closing date is used when the topic has no separate deadline. Course codes are removed from the compact heading; the full group label is retained. Direct links preserve the current Hungarian or English locale. No group ID or personal course list is hardcoded.
+Topic rows show the name, a larger vertically centered completion percentage when supplied by the site, task count, and deadline. Individual task links appear only beneath topics with a deadline or closing date, regardless of completion percentage. Undated topics remain visible without task lists and do not trigger topic-page requests. Original topic and task names are preserved. Topics with upcoming deadlines appear first, earliest deadline first; recently expired items follow, then undated items in their original order. A closing date is used when the topic has no separate deadline. Course codes are removed from the compact heading; the full group label is retained. Direct links preserve the current Hungarian or English locale. No group ID or personal course list is hardcoded.
 
-The extension uses only same-origin GET requests for course and group pages; it does not open task pages in the background or submit work. It refreshes every five minutes while the page is visible. Course data and progress remain in memory, and are cleared when navigating to the login/logout page. Only collapsed dropdown identifiers are saved as display preferences.
+The extension uses only same-origin GET requests for course, group, and topic pages; it does not open individual task pages in the background or submit work. Topic pages are read at most three at a time, with shared topics fetched once per refresh. A failed topic request leaves the course shortcuts available. It refreshes every five minutes while the page is visible. Course data and progress remain in memory, and are cleared when navigating to the login/logout page. Only collapsed dropdown identifiers are saved as display preferences.
 
 Progenv's authenticated sidebar, course links, group redirect, and topic cards were inspected in a signed-in browser. Parser/layout tests also passed with locally captured page markup and mocked requests. The extension itself has not been installed into the signed-in browser, so live background-page fetching still needs confirmation after loading it in Firefox. The captured account markup and progress are not included in the repository; the example screenshot uses synthetic data.
 
@@ -56,6 +56,10 @@ Speci sends a separate top-level `name` field. Stuki's current save client does 
 ## Speci resizable panels
 
 On [Speci](https://progalap.elte.hu/specifikacio/), drag the thin separator between Specification (1) and Data (2) to change their widths. The split is remembered. Double-click the separator to reset it; when focused, use Left/Right, Shift+Left/Right, Home, or End to adjust it with the keyboard.
+
+The separator keeps the site's original thin border. An invisible 9-pixel drag area overlaps the boundary without adding space between the panels.
+
+The horizontal border above Visualization (3) is also draggable to adjust its height relative to Specification. This height ratio is saved independently. Use Up/Down, Shift+Up/Down, Home, or End while the horizontal separator is focused, or double-click it to restore equal heights. Hiding either panel lets the other fill the column; showing both restores the split.
 
 The divider works with Visualization hidden. When Data or the entire left column is hidden, the divider disappears and the remaining column fills the available area. Re-enabling panels restores the saved split. History remains in its original left-side position. Monaco’s existing automatic layout updates the editors after resizing. This feature makes no network requests and does not change document content.
 

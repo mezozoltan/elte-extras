@@ -101,7 +101,22 @@
     return {...target,key:`${course.courseId}/${target.groupId}`,courseName:course.name,
       name:heading || fallback?.name || "",label:groupLabel(heading || fallback?.name || ""),topics:[...topics.values()]};
   }
-  const api = {route,courseName,groupLabel,deadlineTime,sortTopics,courses,groups,group};
+  function tasks(doc, base, locale) {
+    const result = new Map();
+    for (const anchor of doc.querySelectorAll('main a[href]')) {
+      if (anchor.closest('[hidden],[data-sidebar="content"]')) continue;
+      try {
+        const url = new URL(anchor.getAttribute('href'),base);
+        if (url.origin !== ORIGIN || !/\/tasks\/\d+\/?$/.test(url.pathname)) continue;
+        const name = clean(anchor.querySelector('h2,h3,h4')?.textContent || anchor.textContent);
+        if (!name) continue;
+        url.pathname = '/' + locale + url.pathname.replace(/^\/(?:hu|en)(?=\/)/,'');
+        result.set(url.href,{url:url.href,name});
+      } catch { /* Ignore malformed task links. */ }
+    }
+    return [...result.values()];
+  }
+  const api = {route,courseName,groupLabel,deadlineTime,sortTopics,courses,groups,group,tasks};
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else scope.ProgenvSidebarModel = api;
 })(globalThis);

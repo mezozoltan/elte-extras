@@ -21,7 +21,7 @@ assert.equal(orderFixture[0].name,'undated');
 
 const card = (href,name,score,count,deadline='') => `<div data-slot="card"><a href="${href}"><h3>${name}</h3></a><div aria-label="Score ${score}%">${score}%</div><span>${count} feladat</span>${deadline?`<span>Határidő: ${deadline}</span>`:''}</div>`;
 const coursesFixture = '<main><h1>Kurzusok</h1><div data-slot="card"><a href="/courses/1">IP-18PROGEG - Programozás</a></div></main>';
-const groupFixture = '<main><h1>20. csoport</h1>'+card('/courses/1/groups/20/topics/1','1. gyakorlat',0,1)+card('/courses/1/groups/20/topics/2','2. gyakorlat',100,2)+card('/courses/1/topics/1','1. beadandó',50,1,'2026. 11. 01.')+'</main>';
+const groupFixture = '<main><h1>20. csoport</h1>'+card('/courses/1/groups/20/topics/1','1. gyakorlat',0,1)+card('/courses/1/groups/20/topics/2','2. gyakorlat',100,2)+card('/courses/1/topics/1','1. beadandó',100,1,'2026. 11. 01.')+'</main>';
 const sidebarMarkup = '<ul data-sidebar="menu"><li><a href="/hu/courses">Kurzusok</a></li><li><a href="/hu/tasks">Feladattár</a></li><li><a href="/hu/about-us">Rólunk</a></li></ul>';
 const fixtures = process.env.PROGENV_FIXTURE_DIRECTORY;
 const coursesHTML = fixtures ? fs.readFileSync(path.join(fixtures,'progenv-courses-dom.html'),'utf8') : coursesFixture;
@@ -66,6 +66,15 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
       }
       if (url.pathname === '/hu/courses/1/groups/20') return route.fulfill({contentType:'text/html; charset=utf-8',body:groupHTML});
       if (url.pathname === '/hu/courses/1/groups/21') return route.fulfill({contentType:'text/html; charset=utf-8',body:'<main><h1>21. csoport</h1>'+card('/courses/1/groups/21/topics/9','Másik témakör',100,3)+'</main>'});
+      if (/\/topics\/\d+$/.test(url.pathname)) {
+        if (mode === 'task-error') return route.fulfill({status:503,body:'Unavailable'});
+        return route.fulfill({contentType:'text/html; charset=utf-8',body:`<main>
+          <div class="flex flex-1 items-start justify-between"><div><a href="${url.pathname}/tasks/11"><h3 class="font-medium">Esős napok száma</h3></a><span class="text-muted-foreground text-sm">Submissions: 1</span></div></div>
+          <div><a href="/tasks/12"><h3>Leghidegebb hőmérséklet a Balatonon</h3></a></div>
+          <div data-slot="card"><a href="https://example.com/tasks/99"><h3>External</h3></a></div>
+          <div data-slot="card" hidden><a href="/tasks/88">Hidden</a></div>
+        </main>`});
+      }
       return route.fulfill({status:404,body:'Unexpected test request'});
     });
     async function load(collapsed = {}) {
@@ -91,13 +100,37 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     assert.equal(await page.locator('.progenv-topic-score[data-result="incomplete"]').count(),1);
     assert.match(await page.locator('.progenv-topic').last().getAttribute('title'),/feladat/);
     assert.equal(await page.locator('body>main').innerText(),'Kezdőlap');
+    await page.waitForFunction(() => document.querySelectorAll('.progenv-task').length >= 2);
+    assert.equal(await page.locator('.progenv-task').first().innerText(),'Esős napok száma');
+    assert.equal(await page.locator('.progenv-task[href="https://progenv.inf.elte.hu/hu/tasks/12"]').count(),1);
+    assert.equal(await page.locator('.progenv-task').count(),2);
+    // A completed topic with a deadline lists tasks; undated topics do not,
+    // even when their completion is below 100%.
+    assert.equal(await page.locator('li').filter({has:page.locator('.progenv-topic-score[data-result="incomplete"]')}).locator('.progenv-task').count(),0);
+    assert.equal(calls.some(call=>call.path==='/hu/courses/1/groups/20/topics/1'),false);
+    assert(calls.some(call=>call.path==='/hu/courses/1/topics/1'));
+    assert.equal(calls.some(call=>call.path==='/hu/courses/1/groups/20/topics/2'),false);
+    const badge=await page.locator('.progenv-topic-score').first().evaluate(node=>{
+      const badge=node.getBoundingClientRect(),row=node.parentElement.getBoundingClientRect();
+      return {offset:Math.abs(badge.y+badge.height/2-row.y-row.height/2),height:badge.height,width:badge.width};
+    });
+    assert(badge.offset<1 && badge.height>=21 && badge.width>=38,JSON.stringify(badge));
     if (fixtures) {
       assert.equal(await page.locator('.progenv-topic').count(),5);
       assert.equal(await page.locator('.progenv-topic-score[data-result="complete"]').count(),4);
     }
     if (process.env.PROGENV_PREVIEW_PATH) await page.screenshot({path:process.env.PROGENV_PREVIEW_PATH});
+    const headingBefore=await page.locator('.progenv-course-name').boundingBox();
+    const arrowBox=()=>page.locator('.progenv-quick-courses summary').evaluate(node=>{
+      const style=getComputedStyle(node,'::before');return {content:style.content,width:style.width,height:style.height};
+    });
+    const arrowBefore=await arrowBox();
+    assert.deepEqual(arrowBefore,{content:'""',width:'7px',height:'7px'});
     await page.locator('.progenv-quick-courses summary').click();
     assert.equal(await detail.getAttribute('open'),null);
+    const headingAfter=await page.locator('.progenv-course-name').boundingBox();
+    assert.equal(headingBefore.x,headingAfter.x);assert.equal(headingBefore.y,headingAfter.y);
+    assert.deepEqual(await arrowBox(),arrowBefore);
     await page.waitForFunction(() => testSettings.progenvCollapsed['1/20'] === true);
     await page.locator('.progenv-quick-courses summary').click();
     await page.waitForFunction(() => !testSettings.progenvCollapsed['1/20']);
@@ -121,6 +154,9 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     await page.getByRole('button',{name:'Újrapróbálás'}).waitFor();
     mode = 'normal'; await page.getByRole('button',{name:'Újrapróbálás'}).click();
     await page.waitForFunction(() => document.querySelectorAll('.progenv-topic').length >= 3);
+    mode = 'task-error'; await load();
+    await page.getByText('A feladatlista most nem érhető el.').first().waitFor();
+    assert.equal(await page.locator('.progenv-topic').count(),3);
     mode = 'login'; await load();
     await page.getByRole('button',{name:'Újrapróbálás'}).waitFor();
     assert.equal(await page.locator('.progenv-topic').count(),0);
@@ -133,6 +169,6 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     await page.waitForFunction(() => document.querySelectorAll('.progenv-quick-courses').length === 0);
     assert(calls.every(call => call.method === 'GET'));
     assert.deepEqual(errors,[]);
-    console.log('PASS: course/group/topic parsing, locale links, sidebar dropdowns, default open, compact metadata, course-level topics, collapse persistence, active links, SPA remount, streaming redirects, multiple groups, errors/retry, expired login, empty list, logout cleanup, GET-only requests'+(fixtures?' (observed signed-in page markup)':''));
+    console.log('PASS: course/group/topic parsing, task links from observed card structure, centered larger badges, task-page failures, locale links, sidebar dropdowns, default open, compact metadata, course-level topics, collapse persistence, active links, SPA remount, streaming redirects, multiple groups, errors/retry, expired login, empty list, logout cleanup, GET-only requests'+(fixtures?' (observed signed-in page markup)':''));
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exit(1); });

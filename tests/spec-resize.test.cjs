@@ -20,10 +20,10 @@ html = html.replace('</head>',`<style>${css}</style></head>`);
     page.setDefaultTimeout(10000);
     const errors=[]; page.on('pageerror',error=>errors.push(error.message));
     await page.route('**/*',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:html}));
-    async function load(ratio) {
+    async function load(ratio,visualizationRatio = .5) {
       await page.goto('https://progalap.elte.hu/specifikacio/');
-      await page.evaluate(ratio=>{
-        window.settings={specPanelRatio:ratio};
+      await page.evaluate(({ratio,visualizationRatio})=>{
+        window.settings={specPanelRatio:ratio,specVisualizationRatio:visualizationRatio};
         window.browser={storage:{local:{get:async()=>settings,set:async value=>Object.assign(settings,value)}}};
         // The real client's V7 panel-toggle behavior, independent of Monaco/auth.
         window.nativePanels=()=>{
@@ -37,7 +37,7 @@ html = html.replace('</head>',`<style>${css}</style></head>`);
         document.getElementById('panel-buttons').addEventListener('click',nativePanels);
         document.getElementById('panel-buttons').addEventListener('change',nativePanels);
         nativePanels();
-      },ratio);
+      },{ratio,visualizationRatio});
       await page.addScriptTag({path:path.join(repository,'spec-resize.js')});
       await settle();
     }
@@ -46,7 +46,12 @@ html = html.replace('</head>',`<style>${css}</style></head>`);
       const left=document.getElementById('editor-container').parentElement;
       const data=document.getElementById('data-container'),history=document.getElementById('history-container'),divider=document.getElementById('spec-panel-divider');
       return {left:left.getBoundingClientRect().width,data:data.getBoundingClientRect().width,history:history.getBoundingClientRect().width,
-        total:left.parentElement.getBoundingClientRect().width,divider:divider.getBoundingClientRect().width,hidden:divider.hidden,value:+divider.getAttribute('aria-valuenow')};
+        total:left.parentElement.getBoundingClientRect().width,divider:divider.getBoundingClientRect().width,gap:data.getBoundingClientRect().left-left.getBoundingClientRect().right,hidden:divider.hidden,value:+divider.getAttribute('aria-valuenow')};
+    });
+    const heights=()=>page.evaluate(()=>{
+      const editor=document.getElementById('editor-container'),visualization=document.getElementById('visualization-container'),divider=document.getElementById('spec-visualization-divider');
+      const top=editor.getBoundingClientRect(),bottom=visualization.getBoundingClientRect();
+      return {editor:top.height,visualization:bottom.height,total:editor.parentElement.clientHeight,gap:bottom.top-top.bottom,hidden:divider.hidden,value:+divider.getAttribute('aria-valuenow')};
     });
     async function panels(flags) {
       await page.evaluate(flags=>{
@@ -58,6 +63,22 @@ html = html.replace('</head>',`<style>${css}</style></head>`);
     await load(.6);
     assert.equal((await sizes()).value,60);
     const divider=page.locator('#spec-panel-divider');
+    // The hitbox overlaps the existing boundary; it adds no visible stripe or gap.
+    assert.equal((await sizes()).divider,9);
+    assert(Math.abs((await sizes()).gap)<1);
+    const appearance=()=>divider.evaluate(node=>({background:getComputedStyle(node).backgroundColor,extraLine:getComputedStyle(node,'::after').content}));
+    assert.deepEqual(await appearance(),{background:'rgba(0, 0, 0, 0)',extraLine:'none'});
+    await divider.hover();
+    assert.deepEqual(await appearance(),{background:'rgba(0, 0, 0, 0)',extraLine:'none'});
+    // Both sides of the invisible hitbox must drag without snapping on pickup.
+    for(const inset of [1,8]) {
+      const edgeBox=await divider.boundingBox(),before=await sizes();
+      const x=edgeBox.x+inset,y=edgeBox.y+edgeBox.height/2;
+      await page.mouse.move(x,y);await page.mouse.down();
+      assert.equal(await page.evaluate(()=>document.documentElement.classList.contains('spec-divider-dragging')),true);
+      await page.mouse.move(x+30,y);await page.mouse.up();
+      assert(Math.abs((await sizes()).left-before.left-30)<1);
+    }
     const initial=await sizes(),box=await divider.boundingBox();
     await page.mouse.move(box.x+3,box.y+box.height/2); await page.mouse.down();
     await page.mouse.move(430,box.y+box.height/2,{steps:5}); await page.mouse.up();
@@ -76,10 +97,48 @@ html = html.replace('</head>',`<style>${css}</style></head>`);
       const flags={editor:Boolean(bits&1),data:Boolean(bits&2),visualization:Boolean(bits&4),history:Boolean(bits&8)};
       await panels(flags);const size=await sizes();
       assert.equal(size.hidden,!((flags.editor||flags.visualization)&&flags.data),JSON.stringify(flags));
-      if(flags.editor||flags.visualization||flags.data||flags.history)assert(Math.abs(size.left+size.data+size.history+size.divider-size.total)<3,JSON.stringify({flags,size}));
+      if(flags.editor||flags.visualization||flags.data||flags.history)assert(Math.abs(size.left+size.data+size.history-size.total)<3,JSON.stringify({flags,size}));
+      if(!size.hidden)assert(Math.abs(size.gap)<1,JSON.stringify({flags,size}));
+      const height=await heights();
+      assert.equal(height.hidden,!(flags.editor&&flags.visualization));
+      if(flags.editor||flags.visualization)assert(Math.abs(height.editor+height.visualization-height.total)<2,JSON.stringify({flags,height}));
+      if(!height.hidden)assert(Math.abs(height.gap)<1);
     }
     await panels({editor:true,data:true,visualization:true,history:true});
+    const vertical=page.locator('#spec-visualization-divider');
+    assert.equal(await vertical.getAttribute('aria-orientation'),'horizontal');
+    assert.equal((await heights()).value,50);
+    const widthBefore=(await sizes()).left;
+    for(const inset of [1,8]) {
+      const box=await vertical.boundingBox(),before=await heights();
+      const x=box.x+box.width/2,y=box.y+inset;
+      await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+35);await page.mouse.up();
+      assert(Math.abs((await heights()).editor-before.editor-35)<1);
+    }
+    assert.equal((await sizes()).left,widthBefore);
+    assert(Math.abs(await page.evaluate(()=>settings.specVisualizationRatio)-(await heights()).editor/(await heights()).total)<.01);
+    const savedHeight=(await heights()).value;
+    await panels({visualization:false});assert.equal((await heights()).hidden,true);
+    assert(Math.abs((await heights()).editor-(await heights()).total)<1);
+    await panels({visualization:true});assert.equal((await heights()).value,savedHeight);
+    await panels({editor:false});assert.equal((await heights()).hidden,true);
+    assert(Math.abs((await heights()).visualization-(await heights()).total)<1);
+    await panels({editor:true,data:false});assert.equal((await heights()).hidden,false);
+    await vertical.focus();await page.keyboard.press('Home');assert((await heights()).editor>=119);
+    await page.keyboard.press('End');assert((await heights()).visualization>=119);
+    await vertical.dblclick();assert.equal((await heights()).value,50);
+    await page.keyboard.press('ArrowDown');assert.equal((await heights()).value,52);
+    const cancelVertical=await vertical.boundingBox(),beforeVerticalCancel=(await heights()).value;
+    await page.mouse.move(cancelVertical.x+50,cancelVertical.y+4);await page.mouse.down();await page.mouse.move(cancelVertical.x+50,250);
+    await page.keyboard.press('Escape');await page.mouse.up();assert.equal((await heights()).value,beforeVerticalCancel);
+    assert.equal(await page.evaluate(()=>document.documentElement.classList.contains('spec-visualization-dragging')),false);
+    await panels({data:true});
     await divider.focus();await page.keyboard.press('End'); assert((await sizes()).value>=85);
+    const focused=await divider.evaluate(node=>{
+      const style=getComputedStyle(node),line=getComputedStyle(node,'::after');
+      return {outline:style.outlineStyle,lineWidth:line.width,lineLeft:line.left,visible:node.matches(':focus-visible')};
+    });
+    assert.deepEqual(focused,{outline:'none',lineWidth:'1px',lineLeft:'3px',visible:true});
     await page.keyboard.press('Home'); assert((await sizes()).value<=15);
     await page.keyboard.press('ArrowRight'); assert((await sizes()).value>10);
     await divider.dblclick(); assert.equal((await sizes()).value,67);
@@ -91,10 +150,17 @@ html = html.replace('</head>',`<style>${css}</style></head>`);
     await page.mouse.move(cancelBox.x+3,cancelBox.y+50);await page.mouse.down();await page.mouse.move(300,cancelBox.y+50);await page.keyboard.press('Escape');await page.mouse.up();
     assert.equal((await sizes()).value,beforeCancel);
     assert.equal(await page.evaluate(()=>document.documentElement.classList.contains('spec-divider-dragging')),false);
-    await page.addScriptTag({path:path.join(repository,'spec-resize.js')});assert.equal(await divider.count(),1);
-    if(process.env.SPEC_PREVIEW_PATH)await page.screenshot({path:process.env.SPEC_PREVIEW_PATH});
-    await load(.4);assert.equal((await sizes()).value,40);
+    await page.addScriptTag({path:path.join(repository,'spec-resize.js')});assert.equal(await divider.count(),1);assert.equal(await vertical.count(),1);
+    if(process.env.SPEC_PREVIEW_PATH){
+      await panels({editor:true,data:true,visualization:true,history:false});
+      await vertical.evaluate(node=>node.blur());
+      await page.mouse.move(0,0);
+      await page.emulateMedia({colorScheme:'dark'});
+      await page.screenshot({path:process.env.SPEC_PREVIEW_PATH});
+    }
+    await load(.4,.35);assert.equal((await sizes()).value,40);
+    await panels({editor:true,visualization:true});assert.equal((await heights()).value,35);
     assert.deepEqual(errors,[]);
-    console.log('PASS: pointer dragging, persistence, Visualization disabled, Data disabled/full width/restored, all 16 S/D/V/H combinations, keyboard controls, double-click reset, viewport resize, Escape cleanup, duplicate injection'+(process.env.SPEC_HTML_PATH?' (actual Speci HTML/CSS)':''));
+    console.log('PASS: horizontal and vertical pointer dragging, saved width and height, Visualization and Data toggles, all 16 S/D/V/H combinations, keyboard controls, double-click resets, viewport resize, Escape cleanup, duplicate injection'+(process.env.SPEC_HTML_PATH?' (actual Speci HTML/CSS)':''));
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1)});

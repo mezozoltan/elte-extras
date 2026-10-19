@@ -7,22 +7,26 @@
   const shadow = host.attachShadow({mode: "closed"});
   const style = document.createElement("style");
   style.textContent = `
-    :host { all:initial; font:14px/1.45 var(--sh-font,system-ui,sans-serif); color:#000; }
+    :host { all:initial; color-scheme:inherit; font:14px/1.45 var(--sh-font,system-ui,sans-serif); color:#000; }
     * { box-sizing:border-box; }
     button,input,a,summary { font:inherit; }
     button { cursor:pointer; background:var(--sh-button,#361b36); color:#fff; border:1px solid var(--sh-border,#b679b6); border-radius:5px; padding:4px 8px; font-weight:700; }
-    button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible { outline:2px solid var(--sh-border,#b679b6); outline-offset:2px; }
+    button:not(#refresh):focus-visible,a:focus-visible,input:not(#search):focus-visible,summary:focus-visible { outline:2px solid var(--sh-border,#b679b6); outline-offset:2px; }
     #panel { position:fixed; top:var(--sh-top,3rem); bottom:var(--sh-bottom,0px); left:0; width:330px; max-width:95vw; z-index:2147483646; background:var(--sh-menu,#e0d8ba); border-right:1px solid var(--sh-border,#b679b6); display:flex; flex-direction:column; }
     [hidden] { display:none !important; }
     header { padding:8px 12px; background:var(--sh-menu,#e0d8ba); color:#000; }
     .heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
     h2 { font-size:16px; font-weight:400; margin:0; }
-    .tools { padding:10px 12px; display:flex; gap:5px; background:var(--sh-menu,#e0d8ba); color:#000; }
+    .tools { padding:0 12px 10px 12px; display:flex; gap:5px; background:var(--sh-menu,#e0d8ba); color:#000; }
     input { min-width:0; width:100%; border:1px solid #888; border-radius:3px; padding:5px 7px; background:var(--sh-menu,#e0d8ba); color:#000; }
-    #refresh { padding:4px 9px; }
+    #search:focus { outline:none; box-shadow:none; }
+    #refresh { all:revert; box-sizing:border-box; font:inherit; cursor:pointer; padding:4px 9px; }
+    #updated { font-size:11px; opacity:.8; white-space:nowrap; }
+    #counts { margin:8px 0 0; font-size:12px; opacity:.8; }
     #status { padding:8px 12px; font-size:12px; opacity:.8; white-space:pre-line; overflow-wrap:anywhere; }
+    #status:empty { display:none; }
     #status.error { color:var(--sh-error,#c74747); opacity:1; }
-    #list { flex:1; overflow:auto; padding:0 12px 12px; }
+    #list { flex:1; min-height:0; overflow:auto; padding:0 12px 12px; }
     article { margin:0 0 8px; padding:9px; border:1px solid color-mix(in srgb,#000 30%,transparent); border-radius:5px; background:var(--sh-menu,#e0d8ba); }
     article.active { border-color:var(--sh-border,#b679b6); background:color-mix(in srgb,#000 7%,var(--sh-menu,#e0d8ba)); }
     .name { font-size:14px; font-weight:700; overflow-wrap:anywhere; margin-bottom:4px; }
@@ -46,7 +50,7 @@
   // Static markup only. API fields below are always inserted with textContent.
   const template = document.createElement("template");
   template.innerHTML = `<section id="panel" hidden aria-label="Stuki mentési előzmények" lang="hu">
-      <header><div class="heading"><h2>History</h2></div></header>
+      <header><div class="heading"><h2>History</h2><span id="updated" role="status"></span></div></header>
       <div class="tools"><input id="search" type="search" placeholder="Keresés a mentésekben…" aria-label="Mentések keresése"><button id="refresh" title="Mentések frissítése" aria-label="Mentések frissítése">↻</button></div>
       <div id="status" role="status" aria-live="polite"></div><div id="list"></div>
     </section>
@@ -222,7 +226,6 @@
       `${model.title(row)} ${row.uuid} ${date(row)}`.toLocaleLowerCase("hu").includes(term)));
     if (!groups.length) {
       list.append(el("p", "empty", term ? "Nincs találat." : loaded ? "Nincs megjeleníthető mentés." : "Nyomd meg a frissítés gombot a betöltéshez."));
-      return;
     }
     function versionRow(row) {
       const line = el("div", "row"), label = el("span", "meta", date(row));
@@ -246,6 +249,11 @@
         details.append(old); article.append(details);
       }
       list.append(article);
+    }
+    if (loaded) {
+      const counts = el("p", "", `${model.groups(rows).length} struktogram · ${rows.length} mentett verzió`);
+      counts.id = "counts";
+      list.append(counts);
     }
   }
   async function request(url, options = {}) {
@@ -272,12 +280,13 @@
       });
       if (mine !== generation) return;
       rows = model.normalize(payload); loaded = true;
-      const count = model.groups(rows).length;
-      setStatus(`${count} struktogram · ${rows.length} mentett verzió\nFrissítve: ${new Date().toLocaleTimeString("hu-HU")}`);
+      setStatus("");
+      $("updated").textContent = `Frissítve: ${new Date().toLocaleTimeString("hu-HU")}`;
       render();
     } catch (error) {
       if (mine !== generation) return;
       rows = []; loaded = false; render();
+      $("updated").textContent = "";
       const message = error.name === "TimeoutError" ? "A szerver nem válaszolt időben. Próbáld újra a ↻ gombbal." :
         error instanceof TypeError ? "Az API nem érhető el. Ellenőrizd a kapcsolatot és a bővítmény webhelyengedélyét, majd frissíts." : error.message;
       setStatus(message, true);
