@@ -32,7 +32,7 @@ A felület és adatkezelés szimulált API-válaszokkal ellenőrzött. Bejelentk
 
 Ha nem jelenik meg a gomb, töltsd újra az oldalt, és ellenőrizd, hogy a kiegészítő hozzáférhet-e a Stuki webhelyhez.
 
-## Frissítés 1.3.0-ra
+## Frissítés 1.4.0-ra
 
 Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` oldalon nyomd meg az **Újratöltés / Reload** gombot, majd töltsd újra a Stuki lapot. Ha ZIP-ből telepítetted, távolítsd el az ideiglenes régi példányt, és töltsd be az új ZIP-et.
 
@@ -43,3 +43,9 @@ Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` 
 A `Main` a kezdeti struktogram alapértelmezett függvényneve. A Stuki mentéskor a teljes állapotot küldi, így a `data.structograms[].name` mezőben más név is megmarad. A diagram fölötti F művelet bekapcsolja a szerkeszthető függvényfejlécet; átírás és Save után a History ezt a nevet használja. Az eredeti klienssel, elfogott tesztkérésben igazoltuk a név megőrzését, éles írás nélkül.
 
 A Speci ettől eltérően külön, felső szintű `name` mezőt is küld. A Stuki nem küld ilyen mentéscímet; a szerver külön `name` mezőre vonatkozó támogatását hitelesített írással nem ellenőriztük.
+
+## Progenv oldalsáv
+
+A kiegészítő a https://progenv.inf.elte.hu/ oldalon is működik. Bejelentkezés után a **Kurzusok** alatt automatikusan megjelenik minden elérhető kurzus és csoport, például **Programozás · 20.cs.**. Az alapértelmezetten nyitott legördülőben közvetlen témakörlinkek, feladatszámok, teljesítési arányok és határidők láthatók. A fejlécére kattintva bezárható; ezt a beállítást megjegyzi. A megjelenés a Progenv saját oldalsávszíneit használja.
+
+Frissítés után töltsd újra a Progenv lapot is; ha a Firefox kéri, engedélyezd a hozzáférést ehhez a webhelyhez. A kiegészítő csak olvassa a kurzus- és csoportoldalakat a meglévő bejelentkezett munkamenettel, és ötpercenként frissít a látható lapon. Nem küld be feladatot, és nem tárolja tartósan a kurzusadatokat vagy eredményeket. A helyi tárolóba csak az összecsukott kurzus/csoport azonosítója kerül megjelenítési beállításként.

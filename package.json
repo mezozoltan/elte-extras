@@ -1,11 +1,12 @@
 {
   "name": "stuki-history",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "description": "Firefox extension for Stuki saved-diagram history and first-save naming",
   "scripts": {
     "test": "node tests/model.test.cjs",
-    "test:integration": "node tests/save-dialog.test.cjs"
+    "test:integration": "node tests/save-dialog.test.cjs",
+    "test:progenv": "node tests/progenv.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

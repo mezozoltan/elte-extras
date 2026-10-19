@@ -1,6 +1,6 @@
 # Stuki History
 
-A Firefox extension that adds a saved-diagram history panel to [ELTE's Stuki editor](https://progalap.elte.hu/stuki/).
+A Firefox extension for [ELTE's Stuki editor](https://progalap.elte.hu/stuki/) and [Progenv](https://progenv.inf.elte.hu/hu): saved-diagram history, first-save naming, and compact course shortcuts.
 
 ![History panel](docs/preview.png)
 
@@ -13,22 +13,35 @@ A Firefox extension that adds a saved-diagram history panel to [ELTE's Stuki edi
 - Refresh after the saved UUID changes, every 30 seconds while visible and open, or manually.
 - Reuses the editor's login session. Passwords are never requested by the extension; access tokens and diagram lists are not persisted.
 - First-save naming dialog for new documents, including Ctrl+S. The chosen name is applied to the first function before invoking the editor’s own Save action.
-- Only the panel’s open/closed preference is stored locally.
+- Progenv sidebar dropdowns show each course and group, open by default, with direct topic links, task counts, scores, and deadlines.
+- Only display preferences are stored locally: Stuki panel visibility and collapsed Progenv course/group identifiers.
 
 ## Install in Firefox
 
 Requires Firefox 128 or later. This is an unsigned development extension.
 
-1. Download [stuki-history-1.3.0.zip](packages/stuki-history-1.3.0.zip) using GitHub's **Download raw file** control, or clone the repository.
+1. Download [stuki-history-1.4.0.zip](packages/stuki-history-1.4.0.zip) using GitHub's **Download raw file** control, or clone the repository.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and choose the ZIP, or choose `manifest.json` from the cloned repository.
-4. Reload the Stuki page, sign in normally, and click **History** beside **Theme**.
+4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically below **Kurzusok** in the sidebar. Allow the extension access to Progenv if Firefox requests it.
 
 Click History again, or press Escape inside the panel, to close it. Temporary add-ons are removed when Firefox restarts. Persistent installation in standard Firefox requires Mozilla signing; the included package is not signed.
 
 To update a temporary installation, reload it in `about:debugging` if loading unpacked files, or remove it and load the new ZIP. Then reload the Stuki tab.
 
 [Hungarian installation instructions](TELEPITES.md) · [Mozilla temporary-installation documentation](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/)
+
+## Progenv course dropdowns
+
+![Progenv sidebar example with synthetic data](docs/progenv-preview.png)
+
+The extension reads your course list using your current Progenv session, follows each course to its group page or group list, and shows compact topic links in the existing sidebar. For example, **Programozás · 20.cs.** expands to show that group's topics plus course-level topics such as beadandók. The heading toggles the dropdown; it starts open unless you previously collapsed it.
+
+Topic rows show the name, completion percentage when supplied by the site, task count, and deadline. Original topic names and order are preserved. Course codes are removed from the compact heading. Direct links preserve the current Hungarian or English locale. No group ID or personal course list is hardcoded.
+
+The extension uses only same-origin GET requests for course and group pages; it does not open task pages in the background or submit work. It refreshes every five minutes while the page is visible. Course data and progress remain in memory, and are cleared when navigating to the login/logout page. Only collapsed dropdown identifiers are saved as display preferences.
+
+Progenv's authenticated sidebar, course links, group redirect, and topic cards were inspected in a signed-in browser. Parser/layout tests also passed with locally captured page markup and mocked requests. The extension itself has not been installed into the signed-in browser, so live background-page fetching still needs confirmation after loading it in Firefox. The captured account markup and progress are not included in the repository; the example screenshot uses synthetic data.
 
 ## Diagram names
 
@@ -40,7 +53,7 @@ Speci sends a separate top-level `name` field. Stuki's current save client does 
 
 ## Development
 
-No build step or runtime dependencies are required. `manifest.json`, `content.js`, and `model.js` are the extension.
+No build step or runtime dependencies are required. `content.js` / `model.js` handle Stuki, while `progenv.js` / `progenv-model.js` handle Progenv.
 
 Run the portable data-model checks with Node.js:
 
@@ -57,20 +70,30 @@ $env:STUKI_BUNDLE_PATH = 'C:/path/to/stuki-client.js'
 npm run test:integration
 ```
 
+Run the Progenv browser tests after installing Playwright:
+
+```sh
+npm run test:progenv
+```
+
+Those tests use synthetic fixtures and intercepted requests. They cover default-open dropdowns, collapse persistence, locale-aware safe links, group/course topic links, completion metadata, SPA sidebar replacement, streaming redirects, multiple groups, retries, login expiry, logout cleanup, and GET-only access. Optional `PROGENV_FIXTURE_DIRECTORY` and `PROGENV_CSS_PATH` variables enable testing against locally captured markup and CSS; those private fixtures are not committed.
+
 Optionally set `TEST_BROWSER_PATH` to an installed Chromium executable. Repackage with PowerShell:
 
 ```powershell
 ./build.ps1
 ```
 
-The tests cover version chains, forks, cycles, missing parents, duplicate entries, names, and safe links. Layout, search, authentication errors, server errors, empty results, mobile bounds, and keyboard behavior were also checked in an isolated Chromium browser with the site's actual CSS and mocked API responses. The deployed Stuki client was tested with intercepted requests to verify the first-save dialog, Ctrl+S, blank-name validation, cancel, Enter submission, exactly one save per confirmation, name persistence, version linking, preserving a hidden function header, and retrying a failed first save. No authenticated live ELTE account test was performed.
+The tests cover version chains, forks, cycles, missing parents, duplicate entries, names, and safe links. Layout, search, authentication errors, server errors, empty results, mobile bounds, and keyboard behavior were also checked in an isolated Chromium browser with the site's actual CSS and mocked API responses. The deployed Stuki client was tested with intercepted requests to verify the first-save dialog, Ctrl+S, blank-name validation, cancel, Enter submission, exactly one save per confirmation, name persistence, version linking, preserving a hidden function header, and retrying a failed first save. Stuki save requests were not sent to a live authenticated account.
 
 ## API and privacy
 
-The extension runs only on `https://progalap.elte.hu/stuki` and its child paths. It reads:
+The extension runs on `https://progalap.elte.hu/stuki` and its child paths, plus `https://progenv.inf.elte.hu/*`. Stuki history reads:
 
 - `GET https://webprogramozas.inf.elte.hu:3000/me` using the existing session.
 - `GET https://webprogramozas.inf.elte.hu:3001/structograms` using the returned access token.
+
+Progenv reads the signed-in `/{locale}/courses` page and the course/group URLs linked from it. It uses the browser’s existing same-origin cookies without reading or persisting them.
 
 There is no telemetry, deletion, or account-management functionality. When you explicitly confirm a first save, the extension renames the first function through the editor’s own controls and invokes its existing Save action. The editor then performs its normal authenticated `POST /structograms`; the extension does not construct a separate save request. The list endpoint exists and requires authentication; the exact live response format and scope of returned records have not been verified with an authenticated account. Direct arrays and arrays under `structograms`, `items`, or `data` are supported. Unsupported formats produce an error.
 
