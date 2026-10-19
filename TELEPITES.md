@@ -2,6 +2,8 @@
 
 A Stuki fejlécében, a Theme gomb mellett megjelenő **History** gomb nyitja meg és zárja be a mentési előzményeket.
 
+A kiegészítő ikonjára kattintva külön kapcsolható be vagy ki a Stuki, a Specifikáció és a Progenv módosítása. Alapból mindhárom be van kapcsolva. A beállítás megmarad; változtatás után töltsd újra az érintett oldalt. A kiegészítő nem tölti újra automatikusan a megnyitott lapokat.
+
 ## Telepítés Firefoxba
 
 1. Nyisd meg a Firefoxban az `about:debugging#/runtime/this-firefox` címet.
@@ -32,7 +34,7 @@ A felület és adatkezelés szimulált API-válaszokkal ellenőrzött. Bejelentk
 
 Ha nem jelenik meg a gomb, töltsd újra az oldalt, és ellenőrizd, hogy a kiegészítő hozzáférhet-e a Stuki webhelyhez.
 
-## Frissítés 1.8.3-re
+## Frissítés 1.9.0-re
 
 Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` oldalon nyomd meg az **Újratöltés / Reload** gombot, majd töltsd újra a Stuki lapot. Ha ZIP-ből telepítetted, távolítsd el az ideiglenes régi példányt, és töltsd be az új ZIP-et.
 

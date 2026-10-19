@@ -1,5 +1,7 @@
-(() => {
+(async () => {
   "use strict";
+  const {siteEnabled = {}} = await browser.storage.local.get('siteEnabled').catch(() => ({}));
+  if (siteEnabled.stuki === false) return;
   if (document.getElementById("stuki-history-extension")) return;
   const model = globalThis.StukiHistoryModel;
   const host = document.createElement("div");

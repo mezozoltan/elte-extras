@@ -90,6 +90,7 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     catch (error) { console.log('INITIAL STATE',await page.locator('body').innerText(),calls,errors); throw error; }
     const detail = page.locator('.progenv-quick-courses details').first();
     assert.equal(await detail.getAttribute('open'),'');
+    assert.equal(await detail.locator('summary').evaluate(el=>getComputedStyle(el).userSelect),'none');
     assert.equal(await page.locator('.progenv-course-name').innerText(),'Programozás');
     assert.equal(await page.locator('.progenv-group-number').innerText(),'20. csoport');
     assert.equal(await page.locator('.progenv-quick-courses').evaluate(root => root.tagName),'SECTION');

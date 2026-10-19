@@ -1,5 +1,7 @@
-(() => {
+(async () => {
   "use strict";
+  const {siteEnabled = {}} = await browser.storage.local.get('siteEnabled').catch(() => ({}));
+  if (siteEnabled.progenv === false) return;
   const model = globalThis.ProgenvSidebarModel;
   const origin = "https://progenv.inf.elte.hu";
   const locale = () => location.pathname.split('/')[1] === 'en' ? 'en' : 'hu';
@@ -13,7 +15,7 @@
     .progenv-quick-courses { color:var(--sidebar-foreground,inherit); font:inherit; margin-top:8px; padding:8px 0 5px; border-top:1px solid var(--sidebar-border,#8884); min-width:0; }
     .progenv-quick-courses * { box-sizing:border-box; }
     .progenv-quick-courses details { margin:2px 0 5px; }
-    .progenv-quick-courses summary { display:flex; align-items:center; gap:5px; min-height:32px; padding:5px 7px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; list-style:none; }
+    .progenv-quick-courses summary { display:flex; align-items:center; gap:5px; min-height:32px; padding:5px 7px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; list-style:none; user-select:none; -moz-user-select:none; }
     .progenv-quick-courses summary::-webkit-details-marker { display:none; }
     .progenv-quick-courses summary::before { content:''; width:7px; height:7px; margin:0 4px 0 1px; flex:none; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(-45deg); transform-origin:center; transition:transform .12s ease; }
     .progenv-quick-courses details[open] > summary::before { transform:rotate(45deg); }

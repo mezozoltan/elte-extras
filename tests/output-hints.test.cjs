@@ -26,6 +26,7 @@ function card(id,expected,actual,score='0/1 pts',actualFile='out.1') {
       </style></head><body><h3>Beadások — teszteredmények</h3><div role="tabpanel" id="fixture-content-tests">${fixture}</div></body></html>`;
     const requests=[];await page.route('**/*',route=>{requests.push(route.request().url());return route.fulfill({contentType:'text/html; charset=utf-8',body:html});});
     await page.goto('https://progenv.inf.elte.hu/hu/courses/1/groups/20/topics/4/tasks/2');
+    await page.evaluate(() => { window.browser = {storage:{local:{get:async()=>({})}}}; });
     for (const file of ['output-diff.js','progenv-output-hints.js']) await page.addScriptTag({path:path.join(root,file)});
     const settle=()=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     await settle();

@@ -1,5 +1,7 @@
-(() => {
+(async () => {
   "use strict";
+  const {siteEnabled = {}} = await browser.storage.local.get('siteEnabled').catch(() => ({}));
+  if (siteEnabled.speci === false) return;
   if (document.getElementById('spec-panel-divider')) return;
   const editor = document.getElementById('editor-container');
   const data = document.getElementById('data-container');

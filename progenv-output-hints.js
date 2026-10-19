@@ -1,5 +1,7 @@
-(() => {
+(async () => {
   "use strict";
+  const {siteEnabled = {}} = await browser.storage.local.get('siteEnabled').catch(() => ({}));
+  if (siteEnabled.progenv === false) return;
   if (document.getElementById('progenv-output-hint-style')) return;
   const analyzer=globalThis.ProgenvOutputDiff;
   if (!analyzer) return;
