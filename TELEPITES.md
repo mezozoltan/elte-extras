@@ -34,7 +34,7 @@ A felület és adatkezelés szimulált API-válaszokkal ellenőrzött. Bejelentk
 
 Ha nem jelenik meg a gomb, töltsd újra az oldalt, és ellenőrizd, hogy a kiegészítő hozzáférhet-e a Stuki webhelyhez.
 
-## Frissítés 1.10.0-re
+## Frissítés 1.10.1-re
 
 Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` oldalon nyomd meg az **Újratöltés / Reload** gombot, majd töltsd újra a Stuki lapot. Ha ZIP-ből telepítetted, távolítsd el az ideiglenes régi példányt, és töltsd be az új ZIP-et.
 

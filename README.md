@@ -27,7 +27,7 @@ The menu shows each site's favicon beside its name, with switches on the right. 
 
 Requires Firefox 128 or later. This is an unsigned development extension.
 
-1. Download [elte-extras-1.10.0.zip](packages/elte-extras-1.10.0.zip) using GitHub's **Download raw file** control, or clone the repository.
+1. Download [elte-extras-1.10.1.zip](packages/elte-extras-1.10.1.zip) using GitHub's **Download raw file** control, or clone the repository.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and choose the ZIP, or choose `manifest.json` from the cloned repository.
 4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically in a separate section below **Rólunk** in the sidebar. Allow the extension access to Progenv if Firefox requests it.
