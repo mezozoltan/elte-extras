@@ -1,6 +1,6 @@
 {
   "name": "stuki-history",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "private": true,
   "description": "Firefox extension for Stuki saved-diagram history and first-save naming",
   "scripts": {

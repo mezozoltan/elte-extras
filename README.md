@@ -23,7 +23,7 @@ A Firefox extension for [ELTE's Stuki editor](https://progalap.elte.hu/stuki/), 
 
 Requires Firefox 128 or later. This is an unsigned development extension.
 
-1. Download [stuki-history-1.8.2.zip](packages/stuki-history-1.8.2.zip) using GitHub's **Download raw file** control, or clone the repository.
+1. Download [stuki-history-1.8.3.zip](packages/stuki-history-1.8.3.zip) using GitHub's **Download raw file** control, or clone the repository.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and choose the ZIP, or choose `manifest.json` from the cloned repository.
 4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically in a separate section below **Rólunk** in the sidebar. Allow the extension access to Progenv if Firefox requests it.

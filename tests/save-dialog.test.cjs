@@ -56,8 +56,29 @@ const repository = path.resolve(__dirname, '..');
       input.dispatchEvent(new Event('input',{bubbles:true}));
     },value);
     const saveButton = () => page.getByRole('button',{name:/^Save/});
+    async function addStatement() {
+      await page.locator('.structogram-editor .noop').first().click();
+      await page.locator('.elements .element').first().getByRole('button',{name:'↑',exact:true}).click();
+      await page.waitForFunction(() => ![...document.querySelectorAll('#app header button')].find(b => /^Save/.test(b.textContent)).disabled);
+    }
 
     await load('https://progalap.elte.hu/stuki/');
+    assert.equal(await saveButton().isDisabled(),true);
+    await page.keyboard.press('Control+s');
+    assert.equal(await visible(),false);
+    assert.equal(saves.length,0);
+    await addStatement();
+    await page.keyboard.press('Control+z');
+    await page.waitForFunction(() => [...document.querySelectorAll('#app header button')].find(b => /^Save/.test(b.textContent)).disabled);
+    await page.keyboard.press('Control+y');
+    await page.waitForFunction(() => ![...document.querySelectorAll('#app header button')].find(b => /^Save/.test(b.textContent)).disabled);
+    await page.getByRole('button',{name:'History',exact:true}).click();
+    await page.getByRole('button',{name:'Help',exact:true}).click();
+    const helpLayout = await page.locator('#app .help').evaluate(el => ({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,width:innerWidth}));
+    assert.ok(helpLayout.left >= 330);
+    assert.ok(helpLayout.right <= helpLayout.width + 1);
+    await page.getByRole('button',{name:'Help',exact:true}).click();
+    await page.getByRole('button',{name:'History',exact:true}).click();
     await saveButton().click();
     assert.equal(await visible(),true);
     assert.equal(saves.length,0);
@@ -97,6 +118,7 @@ const repository = path.resolve(__dirname, '..');
     assert.equal(await visible(),false);
     // A failed first save leaves the new document eligible for a naming retry.
     await load('https://progalap.elte.hu/stuki/');
+    await addStatement();
     failSave = true;
     await saveButton().click(); await fill('Új név');
     await Promise.all([
@@ -111,6 +133,6 @@ const repository = path.resolve(__dirname, '..');
     await page.keyboard.press('Escape');
     assert.equal(await visible(),false);
     assert.deepEqual(errors,[]);
-    console.log('PASS: first Save and Ctrl+S prompt, whitespace validation, cancel, Enter, exactly one native save, persisted name, hidden header preserved, version linking, existing saves, failed-save retry, Escape');
+    console.log('PASS: empty Save and Ctrl+S blocked, undo/redo updates Save, Help clears History, first-save naming, validation, cancel, Enter, native saves, version linking, failed-save retry, Escape');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exit(1); });

@@ -68,8 +68,9 @@
   const layout = document.createElement("style");
   layout.textContent = `
     #stuki-history-toggle[aria-expanded="true"] { background-color:#602060; }
+    #app header > nav button[data-stuki-empty]:disabled { opacity:.45; filter:grayscale(1); cursor:default; }
     @media(min-width:760px){
-      html.stuki-history-open #app :is(.menu,.structogram-panel){margin-left:330px!important;width:calc(100% - 330px)!important;min-width:0;}
+      html.stuki-history-open #app :is(.help,.menu,.structogram-panel){margin-left:330px!important;width:calc(100% - 330px)!important;min-width:0;box-sizing:border-box;}
     }
   `;
   document.head.append(layout);
@@ -81,6 +82,19 @@
       .find(element => /^Save(?:\s|$)/.test(element.value || element.textContent || ""));
   }
   function firstDiagram() { return document.querySelector("#app .structogram-editor .structogram"); }
+  function hasContent() {
+    return !!document.querySelector('#app .structogram-editor .structogram .body :is(.statement:not(.noop,.placeholder),.if,.while,.repeat,.switch)');
+  }
+  function updateSave() {
+    const save = nativeSave();
+    if (!save) return;
+    if (!hasContent()) {
+      if (!save.disabled) { save.dataset.stukiEmpty = ''; save.disabled = true; }
+    } else if (save.hasAttribute('data-stuki-empty')) {
+      save.disabled = false;
+      delete save.dataset.stukiEmpty;
+    }
+  }
   const nextRender = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   async function revealName(diagram) {
     const control = diagram.querySelector('[title="Show/hide function header"]');
@@ -104,14 +118,16 @@
   // Let the editor perform the save itself, preserving authentication, version
   // linking, styling settings, and its existing failure behavior.
   document.addEventListener("click", event => {
-    if (replayingSave || new URL(location.href).searchParams.get("uuid")) return;
     const save = nativeSave();
     if (!save || !event.composedPath().includes(save)) return;
+    if (!hasContent()) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    if (replayingSave || new URL(location.href).searchParams.get("uuid")) return;
     event.preventDefault(); event.stopImmediatePropagation();
     showNameDialog();
   }, true);
   window.addEventListener("keydown", event => {
     if (!event.ctrlKey || event.key.toLowerCase() !== "s") return;
+    if (!hasContent()) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (!nameDialog.open && event.composedPath().includes(host)) return;
     if (!nameDialog.open && new URL(location.href).searchParams.get("uuid")) return;
     event.preventDefault(); event.stopImmediatePropagation();
@@ -168,6 +184,7 @@
   toggleWrap.append(toggle);
   // Place the control in the real header so the site's own CSS styles it.
   function mountHeader() {
+    updateSave();
     const nav = document.querySelector("#app header > nav") || document.querySelector("#root header > nav");
     if (!nav) return;
     const theme = [...nav.querySelectorAll('button,input[type="button"]')].find(element => /^Theme\s*:/i.test(element.value || element.textContent || ""));
