@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Stuki History",
-  "version": "1.9.0",
+  "name": "ELTE Extras",
+  "version": "1.9.1",
   "description": "Stuki-előzmények, Progenv-oldalsáv és kimeneteltérés-jelzések, átméretezhető Speci-panelek.",
   "permissions": [
     "storage"
@@ -57,7 +57,7 @@
     }
   },
   "action": {
-    "default_title": "Stuki History – Webhelyek",
+    "default_title": "ELTE Extras – Webhelyek",
     "default_popup": "popup.html"
   }
 }

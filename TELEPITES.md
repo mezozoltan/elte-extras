@@ -1,4 +1,4 @@
-# Stuki History
+# ELTE Extras
 
 A Stuki fejlécében, a Theme gomb mellett megjelenő **History** gomb nyitja meg és zárja be a mentési előzményeket.
 
@@ -8,7 +8,7 @@ A kiegészítő ikonjára kattintva külön kapcsolható be vagy ki a Stuki, a S
 
 1. Nyisd meg a Firefoxban az `about:debugging#/runtime/this-firefox` címet.
 2. Kattints a **Load Temporary Add-on… / Ideiglenes kiegészítő betöltése…** gombra.
-3. Válaszd ki a mellékelt `stuki-history.zip` fájlt, vagy a kicsomagolt mappában a `manifest.json` fájlt.
+3. Válaszd ki a mellékelt `elte-extras.zip` fájlt, vagy a kicsomagolt mappában a `manifest.json` fájlt.
 4. Nyisd meg vagy töltsd újra a https://progalap.elte.hu/stuki/ oldalt.
 5. Jelentkezz be a szokásos ELTE-fiókoddal, és kattints a **History** gombra.
 
@@ -34,7 +34,7 @@ A felület és adatkezelés szimulált API-válaszokkal ellenőrzött. Bejelentk
 
 Ha nem jelenik meg a gomb, töltsd újra az oldalt, és ellenőrizd, hogy a kiegészítő hozzáférhet-e a Stuki webhelyhez.
 
-## Frissítés 1.9.0-re
+## Frissítés 1.9.1-re
 
 Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` oldalon nyomd meg az **Újratöltés / Reload** gombot, majd töltsd újra a Stuki lapot. Ha ZIP-ből telepítetted, távolítsd el az ideiglenes régi példányt, és töltsd be az új ZIP-et.
 
