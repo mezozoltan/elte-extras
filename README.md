@@ -15,6 +15,7 @@ A Firefox extension for [ELTE's Stuki editor](https://progalap.elte.hu/stuki/), 
 - First-save naming dialog for new documents, including Ctrl+S. The chosen name is applied to the first function before invoking the editor’s own Save action.
 - Progenv sidebar dropdowns show each course and group, open by default, with direct topic links, task counts, scores, and deadlines.
 - Full group names appear beside Progenv course names, including custom group labels.
+- Compact hints on failed Progenv tests when output differs only in whitespace, invisible characters, or canonically equivalent Unicode.
 - Draggable divider between Speci’s Specification and Data columns, with a saved size ratio, keyboard controls, and panel-toggle support.
 - Only display preferences are stored locally: Stuki panel visibility, collapsed Progenv course/group identifiers, and the Speci split ratio.
 
@@ -22,7 +23,7 @@ A Firefox extension for [ELTE's Stuki editor](https://progalap.elte.hu/stuki/), 
 
 Requires Firefox 128 or later. This is an unsigned development extension.
 
-1. Download [stuki-history-1.7.0.zip](packages/stuki-history-1.7.0.zip) using GitHub's **Download raw file** control, or clone the repository.
+1. Download [stuki-history-1.8.0.zip](packages/stuki-history-1.8.0.zip) using GitHub's **Download raw file** control, or clone the repository.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on…** and choose the ZIP, or choose `manifest.json` from the cloned repository.
 4. Reload Stuki or Progenv and sign in normally. On Stuki, click **History** beside **Theme**. On Progenv, course shortcuts appear automatically in a separate section below **Rólunk** in the sidebar. Allow the extension access to Progenv if Firefox requests it.
@@ -45,6 +46,16 @@ The extension uses only same-origin GET requests for course, group, and topic pa
 
 Progenv's authenticated sidebar, course links, group redirect, and topic cards were inspected in a signed-in browser. Parser/layout tests also passed with locally captured page markup and mocked requests. The extension itself has not been installed into the signed-in browser, so live background-page fetching still needs confirmation after loading it in Firefox. The captured account markup and progress are not included in the repository; the example screenshot uses synthetic data.
 
+## Progenv output-difference hints
+
+![Output hint example using synthetic test data](docs/output-hint-preview.png)
+
+In **Beadások → Tests**, expand a failed test to compare the expected and submitted outputs. If the visible values match but the strings differ in whitespace or supported invisible characters, a small note explains the difference. Examples include an extra or missing final newline, trailing spaces, a tab instead of a space, LF versus CRLF line endings, a non-breaking space, a BOM, or a zero-width space. Hover over the note for the first differing line/character and the trailing-whitespace details.
+
+Passed tests, identical outputs, missing preview data, and ordinary wrong-value failures get no hint. Token boundaries are preserved: `12` versus `1 2` is not treated as a harmless invisible-character difference. The note is explanatory, not a claim that the answer should pass; formatting can be required by the grader. Multiple output files are matched by filename. The original output text and the site's copy/download controls are not changed.
+
+This feature reads only test results already rendered in the page. It makes no network requests, performs no submissions or re-runs, and stores no test/output data. Hints update as test details load or submissions change, and use the current Hungarian/English locale. The observed failed-test markup was used only for local verification and is not committed.
+
 ## Diagram names
 
 Click **Save** (or press **Ctrl+S**) on a new document to enter a name. Confirm with **Mentés** or Enter. Cancel or Escape leaves the document unsaved. Blank names are rejected. The first function is renamed in the editor before the normal save runs; its heading stays hidden if it was hidden before. Subsequent saves of the same document do not ask again.
@@ -65,7 +76,7 @@ The divider works with Visualization hidden. When Data or the entire left column
 
 ## Development
 
-No build step or runtime dependencies are required. `content.js` / `model.js` handle Stuki, while `progenv.js` / `progenv-model.js` handle Progenv and `spec-resize.js` handles Speci.
+No build step or runtime dependencies are required. `content.js` / `model.js` handle Stuki, while `progenv.js` / `progenv-model.js` handle Progenv `output-diff.js` / `progenv-output-hints.js` annotate Progenv test results, and `spec-resize.js` handles Speci.
 
 Run the portable data-model checks with Node.js:
 
@@ -113,3 +124,5 @@ There is no telemetry, deletion, or account-management functionality. When you e
 This is an independent extension, not an official ELTE add-on. The original site's bundled code and CSS are not included in this repository.
 
 The Speci divider tests cover mouse dragging, saved ratios, all 16 combinations of editor/data/visualization/history visibility, keyboard resizing, minimum widths, viewport changes, drag cancellation, and repeated injection. Set `SPEC_HTML_PATH` and `SPEC_CSS_PATH` to locally downloaded Speci HTML/CSS to run the same checks against its actual layout.
+
+Output hint tests cover invisible-only comparisons, extra/missing final newlines, tabs, spaces, LF/CRLF, Unicode normalization, wrong-value/token-boundary safety, passing-test suppression, asynchronous loading, multiple filenames, rerender cleanup, duplicate injection, and language selection. Optional `FAILED_TEST_FIXTURE_PATH` validates the DOM integration against a locally captured failed-test card. It must not contain source code or account details and is not part of the extension package.

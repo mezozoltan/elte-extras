@@ -67,6 +67,8 @@ const repository = path.resolve(__dirname, '..');
     await click('name-cancel');
     assert.equal(await visible(),false);
     assert.equal(await page.locator('.header-container').count(),0);
+    // Closing a native dialog queues its close/focus-restoration event.
+    await page.waitForFunction(() => /^Save/.test(document.activeElement?.textContent || ''));
     await page.keyboard.press('Control+s');
     assert.equal(await visible(),true);
     await page.keyboard.press('Control+s');

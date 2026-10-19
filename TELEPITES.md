@@ -32,7 +32,7 @@ A felület és adatkezelés szimulált API-válaszokkal ellenőrzött. Bejelentk
 
 Ha nem jelenik meg a gomb, töltsd újra az oldalt, és ellenőrizd, hogy a kiegészítő hozzáférhet-e a Stuki webhelyhez.
 
-## Frissítés 1.7.0-ra
+## Frissítés 1.8.0-ra
 
 Ha a kiegészítőt kicsomagolt mappából töltötted be, az `about:debugging` oldalon nyomd meg az **Újratöltés / Reload** gombot, majd töltsd újra a Stuki lapot. Ha ZIP-ből telepítetted, távolítsd el az ideiglenes régi példányt, és töltsd be az új ZIP-et.
 
@@ -55,3 +55,9 @@ A témakörök a legközelebbi jövőbeli határidő szerint rendezve jelennek m
 ## Átméretezhető Speci-panelek
 
 A https://progalap.elte.hu/specifikacio/ oldalon az 1. Specification és a 2. Data oszlop közötti elválasztó húzható. A szélességarányt megjegyzi. Dupla kattintással visszaállítható, fókuszban a bal/jobb nyíl, Shift+nyíl, Home és End billentyűkkel állítható. A Visualization kikapcsolásakor is működik. Ha a Data panelt kapcsolod ki, az elválasztó eltűnik, a megmaradt panel pedig kitölti a helyet; visszakapcsoláskor a korábbi arány visszaáll. Nem módosítja a dokumentumot és nem küld hálózati kérést.
+
+## Láthatatlan eltérések a Progenv tesztkimenetekben
+
+A **Beadások → Tests** részen egy sikertelen teszt kibontásakor kis szöveges jelzés jelenik meg, ha az elvárt és hallgatói kimenet látható értékei megegyeznek, de például plusz/hiányzó záró sortörés, szóköz, tabulátor, LF/CRLF sorvég vagy láthatatlan Unicode-karakter okoz eltérést. A jelzés fölé mutatva az első eltérés helye és a záró whitespace részletei is látszanak.
+
+Sikeres tesztnél, azonos kimenetnél és eltérő látható értékeknél nincs jelzés. Az eredeti kimenetet és a másolás/letöltés gombokat nem módosítja, nem indít tesztet vagy beadást, nem küld új hálózati kérést és nem tárolja a tesztadatokat. A formázási eltérés ugyanúgy lehet valódi hiba; a szöveg csak segít megtalálni az okát.
