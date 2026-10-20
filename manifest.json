@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ELTE Extras",
-  "version": "1.10.3",
+  "version": "1.10.4",
   "description": "Quality of life changes to sites used by ELTE IK students.",
   "permissions": [
     "storage"
@@ -50,6 +50,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "elte-extras@spyhq.hu",
+      "update_url": "https://raw.githubusercontent.com/mezozoltan/elte-extras/main/updates.json",
       "strict_min_version": "128.0",
       "data_collection_permissions": {
         "required": [

@@ -1,0 +1,63 @@
+name: Update Firefox feed
+
+on:
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag containing the signed XPI (blank uses latest)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firefox-update-feed
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name == 'workflow_dispatch' || (!github.event.release.draft && !github.event.release.prerelease)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+      - name: Generate feed from signed release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "$RELEASE_TAG" ]; then
+            encoded_tag=$(python3 -c 'import os,urllib.parse; print(urllib.parse.quote(os.environ["RELEASE_TAG"], safe=""))')
+            endpoint="repos/$GITHUB_REPOSITORY/releases/tags/$encoded_tag"
+          else
+            endpoint="repos/$GITHUB_REPOSITORY/releases/latest"
+          fi
+          gh api "$endpoint" > "$RUNNER_TEMP/release.json"
+          if jq -e '.draft or .prerelease' "$RUNNER_TEMP/release.json" >/dev/null; then
+            echo "Draft or prerelease; feed unchanged."
+            exit 0
+          fi
+          count=$(jq '[.assets[] | select(.name | endswith(".xpi"))] | length' "$RUNNER_TEMP/release.json")
+          if [ "$count" -eq 0 ]; then
+            echo "No signed XPI attached; feed unchanged."
+            exit 0
+          fi
+          if [ "$count" -ne 1 ]; then
+            echo "Expected exactly one signed XPI."
+            exit 1
+          fi
+          url=$(jq -r '.assets[] | select(.name | endswith(".xpi")) | .browser_download_url' "$RUNNER_TEMP/release.json")
+          curl --fail --location --proto '=https' --proto-redir '=https' "$url" -o "$RUNNER_TEMP/update.xpi"
+          python3 scripts/update-firefox-feed.py --xpi "$RUNNER_TEMP/update.xpi" --url "$url"
+          if git diff --quiet -- updates.json; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add updates.json
+          git commit -m 'Update Firefox signed release feed'
+          git push origin HEAD:main

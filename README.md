@@ -30,6 +30,10 @@ Open the toolbar's extensions menu to access or pin **ELTE Extras**. Its popup l
 
 To update manually, download the newer signed `.xpi` and repeat the installation steps.
 
+Signed versions containing the GitHub update URL can receive future Firefox updates automatically. Install the first such signed version manually; older installations cannot discover the new update URL on their own.
+
+For releases: build the ZIP, submit it to Mozilla for unlisted signing, and attach the resulting signed `.xpi` to a GitHub release before publishing it. The **Update Firefox feed** workflow updates `updates.json` with the signed file's version, download URL, and SHA-256 hash. If the XPI is attached after publishing, run that workflow manually from **Actions**, specifying the release tag. ZIP-only releases do not change the feed. The feed stays empty until a signed XPI is available. Keep the add-on ID and update URL unchanged across releases. Chromium installations loaded with **Load unpacked** still require manual updates.
+
 [Firefox installation help](https://support.mozilla.org/en-US/kb/find-and-install-add-ons-add-features-to-firefox)
 
 ## Install in Chromium, Chrome, Brave, or Edge
