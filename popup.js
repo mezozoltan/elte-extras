@@ -12,7 +12,7 @@
     const {siteEnabled = {}} = await browser.storage.local.get('siteEnabled');
     for (const input of inputs) { input.checked = siteEnabled[input.name] !== false; input.disabled = false; }
   } catch {
-    status.textContent = 'A beállítások nem tölthetők be. Nyisd meg újra a menüt.';
+    status.textContent = 'Could not load settings. Reopen the menu.';
     return;
   }
   document.querySelector('form').addEventListener('submit', event => event.preventDefault());
@@ -25,7 +25,7 @@
       status.textContent = '';
     } catch {
       input.checked = !checked;
-      status.textContent = 'Nem sikerült menteni. Próbáld újra.';
+      status.textContent = 'Could not save settings. Try again.';
     } finally {
       inputs.forEach(control => { control.disabled = false; });
     }

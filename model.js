@@ -18,7 +18,7 @@
     let data = row.data;
     if (typeof data === "string") { try { data = JSON.parse(data); } catch { data = null; } }
     const names = Array.isArray(data?.structograms) ? data.structograms.map(item => item?.name).filter(value => typeof value === "string" && value.trim()) : [];
-    return names?.join(" · ") || "Névtelen struktogram";
+    return names?.join(" · ") || "Main";
   }
   function groups(rows) {
     const byId = new Map(rows.map(row => [row.id, row]));

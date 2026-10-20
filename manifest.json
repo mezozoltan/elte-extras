@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ELTE Extras",
-  "version": "1.10.2",
-  "description": "Stuki-előzmények, Progenv-oldalsáv és kimeneteltérés-jelzések, átméretezhető Speci-panelek.",
+  "version": "1.10.3",
+  "description": "Quality of life changes to sites used by ELTE IK students.",
   "permissions": [
     "storage"
   ],
@@ -49,7 +49,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "stuki-history@local.invalid",
+      "id": "elte-extras@spyhq.hu",
       "strict_min_version": "128.0",
       "data_collection_permissions": {
         "required": [
@@ -59,7 +59,7 @@
     }
   },
   "action": {
-    "default_title": "ELTE Extras – Webhelyek",
+    "default_title": "ELTE Extras Sites",
     "default_popup": "popup.html",
     "default_icon": "icons/elte-extras.png"
   },

@@ -39,13 +39,14 @@ const root = path.resolve(__dirname,'..');
       await page.waitForFunction(()=>[...document.querySelectorAll('input')].every(i=>!i.disabled));
     }
     await load();
-    assert.equal(await page.locator('label').first().textContent(),'Struktogram');
+    assert.equal(await page.locator('label').first().textContent(),'Structogram');
+    assert.equal(await page.locator('html').getAttribute('lang'),'en');
     assert.equal(await page.locator('small').count(),0);
     assert.equal(await page.locator('#details').isVisible(),false);
-    await page.getByRole('button',{name:'Részletek'}).click();
+    await page.getByRole('button',{name:'Details'}).click();
     assert.equal(await page.locator('#details').isVisible(),true);
     assert.equal(await page.locator('#details h2').count(),3);
-    await page.getByRole('button',{name:'Részletek'}).click();
+    await page.getByRole('button',{name:'Details'}).click();
     assert.equal(await page.locator('#details').isVisible(),false);
     assert.equal(await page.locator('label img').evaluateAll(images=>images.every(img=>img.complete&&img.naturalWidth>0)),true);
     assert.equal(await page.locator('label').evaluateAll(labels=>labels.every(label=>label.querySelector('img').getBoundingClientRect().right<label.querySelector('input').getBoundingClientRect().left)),true);
@@ -70,7 +71,7 @@ const root = path.resolve(__dirname,'..');
     await check('speci').uncheck();
     await page.waitForFunction(()=>!document.querySelector('input').disabled);
     assert.equal(await check('speci').isChecked(),true);
-    assert.match(await page.locator('#status').textContent(),/Nem sikerült/);
+    assert.equal(await page.locator('#status').textContent(),'Could not save settings. Try again.');
     assert.deepEqual(errors,[]);
     console.log('PASS: all site gates, default enabled, independent switches, persistence, existing preferences preserved, storage-error rollback');
   } finally { await browser.close(); }

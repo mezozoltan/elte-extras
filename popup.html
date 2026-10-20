@@ -1,39 +1,39 @@
 <!doctype html>
-<html lang="hu">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ELTE Extras – Webhelyek</title>
+  <title>ELTE Extras Sites</title>
   <link rel="stylesheet" href="popup.css">
   <script src="popup.js" defer></script>
 </head>
 <body>
   <h1>ELTE Extras</h1>
   <form>
-    <label><img src="icons/struktogram.png" alt=""><span>Struktogram</span><input type="checkbox" name="stuki" disabled></label>
-    <label><img src="icons/specifikacio.png" alt=""><span>Specifikáció</span><input type="checkbox" name="speci" disabled></label>
+    <label><img src="icons/struktogram.png" alt=""><span>Structogram</span><input type="checkbox" name="stuki" disabled></label>
+    <label><img src="icons/specifikacio.png" alt=""><span>Specification</span><input type="checkbox" name="speci" disabled></label>
     <label><img src="icons/progenv.ico" alt=""><span>Progenv</span><input type="checkbox" name="progenv" disabled></label>
   </form>
-  <button id="details-toggle" type="button" aria-expanded="false" aria-controls="details">Részletek</button>
-  <section id="details" hidden aria-label="A kiegészítő módosításai">
-    <h2>Struktogram</h2>
+  <button id="details-toggle" type="button" aria-expanded="false" aria-controls="details">Details</button>
+  <section id="details" hidden aria-label="Extension changes">
+    <h2>Structogram</h2>
     <ul>
-      <li>History gomb és menü: Innovációs ötlet.</li>
-      <li>Mentéskor megadható név: Ez is.</li>
-      <li>Egyéni favicon.</li>
+      <li>History button and menu: An innovative idea.</li>
+      <li>Name your diagram when saving: This too.</li>
+      <li>Custom favicon.</li>
     </ul>
-    <h2>Specifikáció</h2>
+    <h2>Specification</h2>
     <ul>
-      <li>Átméretezhető lapok</li>
-      <li>Egyéni favicon.</li>
+      <li>Resizable panels.</li>
+      <li>Custom favicon.</li>
     </ul>
     <h2>Progenv</h2>
     <ul>
-      <li>Külön kurzuslista a baloldalon.</li>
-      <li>A feladatok megjelennek a témakörök alatt ha van határidő rájuk.</li>
-      <li>A sikertelen teszteknél jelzés jelenik meg, ha csak szóköz, sortörés vagy más láthatatlan formázási eltérés van.</li>
+      <li>A separate course list in the left sidebar.</li>
+      <li>Tasks appear under topics that have a deadline.</li>
+      <li>Failed tests show a hint when outputs differ only in spaces, line breaks, or other invisible formatting.</li>
     </ul>
-    <p>A kapcsolók az adott webhely összes módosítását vezérlik. Változtatás után töltsd újra az érintett oldalt. A beállítások megmaradnak.</p>
+    <p>Each switch controls all changes for that site. Reload the affected page after making a change. Your settings are saved.</p>
   </section>
   <p id="status" role="status" aria-live="polite"></p>
 </body>
