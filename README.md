@@ -1,4 +1,4 @@
-# <img src="icons/elte-extras.png" alt="" width="32" height="32"> ELTE Extras
+# <img src="icons/elte-extras.png" alt="" width="32" height="32" align="middle"> ELTE Extras
 
 A Firefox extension for [ELTE's Structogram editor](https://progalap.elte.hu/stuki/), [ELTE's Specification editor](https://progalap.elte.hu/specifikacio/), and [ELTE's Progenv](https://progenv.inf.elte.hu/hu): Adding whats already supposed to be there.
 
