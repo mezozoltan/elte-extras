@@ -1,7 +1,18 @@
 {
   "addons": {
     "elte-extras@spyhq.hu": {
-      "updates": []
+      "updates": [
+        {
+          "version": "1.10.4",
+          "update_link": "https://github.com/mezozoltan/elte-extras/releases/download/v1.10.4/elte-extras-1.10.4.xpi",
+          "update_hash": "sha256:7e2a4adb6c1534a83f294455d978bae7cf1a117cab959aa672bac2c90f993d83",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "128.0"
+            }
+          }
+        }
+      ]
     }
   }
 }
