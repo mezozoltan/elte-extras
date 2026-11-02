@@ -220,6 +220,12 @@
   window.addEventListener("resize", mountHeader);
   mountHeader();
   let opened = false, rows = [], busy = false, generation = 0;
+  let indexedRows = null, indexedGroups = [];
+  const rowLabels = new WeakMap();
+  function labels(row) {
+    if (!rowLabels.has(row)) rowLabels.set(row,{title:model.title(row),date:date(row)});
+    return rowLabels.get(row);
+  }
   let currentUser = null;
   let lastURL = location.href, loaded = false, lastAttempt = 0;
   const expanded = new Set();
@@ -241,23 +247,27 @@
     const list = $("list"); list.replaceChildren();
     const active = new URL(location.href).searchParams.get("uuid");
     const term = $("search").value.trim().toLocaleLowerCase("hu");
-    const groups = model.groups(rows).filter(group => group.versions.some(row =>
-      `${model.title(row)} ${row.uuid} ${date(row)}`.toLocaleLowerCase("hu").includes(term)));
+    if (indexedRows !== rows) {
+      indexedRows=rows;
+      indexedGroups=model.groups(rows).map(group=>({...group,search:group.versions.map(row=>
+        `${labels(row).title} ${row.uuid} ${labels(row).date}`.toLocaleLowerCase('hu'))}));
+    }
+    const groups=indexedGroups.filter(group=>group.search.some(text=>text.includes(term)));
     if (!groups.length) {
       list.append(el("p", "empty", term ? "Nincs találat." : loaded ? "Nincs megjeleníthető mentés." : "Nyomd meg a frissítés gombot a betöltéshez."));
     }
     function versionRow(row) {
-      const line = el("div", "row"), label = el("span", "meta", date(row));
+      const line = el("div", "row"), label = el("span", "meta", labels(row).date);
       const link = el("a", "", row.uuid === active ? "Megnyitva" : "Megnyitás");
       link.href = model.link(row);
-      link.title = model.title(row) + " – " + row.uuid;
+      link.title = labels(row).title + " – " + row.uuid;
       if (row.uuid === active) link.setAttribute("aria-current", "page");
       // Normal navigation preserves the editor's unsaved-change confirmation.
       line.append(label, link); return line;
     }
     for (const group of groups) {
       const article = el("article", group.versions.some(row => row.uuid === active) ? "active" : "");
-      article.append(el("div", "name", model.title(group.tip)), versionRow(group.tip));
+      article.append(el("div", "name", labels(group.tip).title), versionRow(group.tip));
       if (group.versions.length > 1) {
         const details = el("details");
         details.open = expanded.has(group.tip.id) || group.versions.slice(1).some(row => row.uuid === active);
@@ -270,7 +280,7 @@
       list.append(article);
     }
     if (loaded) {
-      const counts = el("p", "", `${model.groups(rows).length} struktogram · ${rows.length} mentett verzió`);
+      const counts = el("p", "", `${indexedGroups.length} struktogram · ${rows.length} mentett verzió`);
       counts.id = "counts";
       list.append(counts);
     }

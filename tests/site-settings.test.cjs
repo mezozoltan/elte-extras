@@ -11,7 +11,8 @@ const root = path.resolve(__dirname,'..');
     let read = false;
     await vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'), {
       browser:{storage:{local:{get:async key => {
-        assert.equal(key,'siteEnabled'); read = true;
+        if (file==='progenv.js') assert.deepEqual(Array.from(key),['siteEnabled','progenvCollapsed','progenvHiddenTopics']);
+        else assert.equal(key,'siteEnabled'); read = true;
         return {siteEnabled:{[site]:false}};
       }}}}
     });

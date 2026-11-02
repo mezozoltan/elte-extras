@@ -1,12 +1,15 @@
 {
   "name": "elte-extras",
-  "version": "1.10.4",
+  "version": "1.11.0",
   "private": true,
   "description": "Firefox extension with extras for ELTE Stuki, Specifikáció, and Progenv",
   "scripts": {
-    "test": "node tests/model.test.cjs",
+    "test": "node scripts/test-all.cjs",
+    "test:unit": "node tests/model.test.cjs && node tests/output-diff.test.cjs",
     "test:integration": "node tests/save-dialog.test.cjs",
     "test:progenv": "node tests/progenv.test.cjs",
+    "test:progenv-interactions": "node tests/progenv-interactions.test.cjs",
+    "test:firefox": "node tests/firefox-extension.test.cjs",
     "test:spec": "node tests/spec-resize.test.cjs",
     "test:output": "node tests/output-diff.test.cjs",
     "test:output-ui": "node tests/output-hints.test.cjs",
@@ -14,6 +17,7 @@
     "test:favicon": "node tests/site-favicon.test.cjs"
   },
   "devDependencies": {
-    "playwright": "1.62.1"
+    "playwright": "1.62.1",
+    "selenium-webdriver": "4.51.0"
   }
 }

@@ -27,13 +27,21 @@ function card(id,expected,actual,score='0/1 pts',actualFile='out.1') {
     const requests=[];await page.route('**/*',route=>{requests.push(route.request().url());return route.fulfill({contentType:'text/html; charset=utf-8',body:html});});
     await page.goto('https://progenv.inf.elte.hu/hu/courses/1/groups/20/topics/4/tasks/2');
     await page.evaluate(() => { window.browser = {storage:{local:{get:async()=>({})}}}; });
-    for (const file of ['output-diff.js','progenv-output-hints.js']) await page.addScriptTag({path:path.join(root,file)});
+    await page.addScriptTag({path:path.join(root,'output-diff.js')});
+    await page.evaluate(()=>{const original=ProgenvOutputDiff.analyze;window.comparisonCount=0;ProgenvOutputDiff.analyze=(...args)=>{comparisonCount++;return original(...args);};});
+    await page.addScriptTag({path:path.join(root,'progenv-output-hints.js')});
     const settle=()=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     await settle();
     assert.equal(await page.locator('.progenv-output-hint').count(),1);
     assert.match(await page.locator('.progenv-output-hint').innerText(),/Plusz sortörés/);
     assert.match(await page.locator('.progenv-output-hint').getAttribute('title'),/Elvárt/);
     assert.equal(await page.locator('[data-test="1"] pre').last().textContent(),'2 4 6\n');
+    const comparisons=await page.evaluate(()=>comparisonCount);
+    await page.locator('h3').evaluate(node=>node.textContent='Unrelated heading update'); await settle();
+    assert.equal(await page.evaluate(()=>comparisonCount),comparisons);
+    // Changes inside a test panel still reuse comparisons when output text is unchanged.
+    await page.locator('[data-test="4"] span').first().evaluate(node=>node.textContent='Test 4 '); await settle();
+    assert.equal(await page.evaluate(()=>comparisonCount),comparisons);
     if (process.env.OUTPUT_HINT_PREVIEW_PATH) await page.screenshot({path:process.env.OUTPUT_HINT_PREVIEW_PATH});
     // Async expansion/loading adds the pre blocks after the test already exists.
     await page.evaluate(markup=>document.getElementById('fixture-content-tests').insertAdjacentHTML('beforeend',markup),card(7,'x y','x\ty'));

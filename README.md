@@ -61,6 +61,8 @@ The extension reads your course list using your current Progenv session, follows
 
 Individual task links appear only beneath topics with a deadline or closing date, regardless of completion percentage. Topics with upcoming deadlines appear first, earliest deadline first.
 
+Hover over a sidebar topic to turn its percentage badge into an **×** button. Confirm to hide that topic and its task links. Hidden topics have a **Show in sidebar** button on their course/group card and topic page. These choices are saved locally and also apply after switching languages.
+
 ## Progenv output-difference hints
 
 ![Output hint example using synthetic test data](docs/output-hint-preview.png)
@@ -81,3 +83,9 @@ Progenv reads the signed-in `/{locale}/courses` page and the course/group URLs l
 There is no telemetry, deletion, or account-management functionality. When you explicitly confirm a first save, the extension renames the first function through the editor’s own controls and invokes its existing Save action. The editor then performs its normal authenticated `POST /structograms`; the extension does not construct a separate save request. The list endpoint already exists, the extension just adds a button for it.
 
 This is an independent extension, not an official ELTE add-on. The original site's bundled code and CSS are not included in this repository.
+
+## Development tests
+
+Use Node.js 24, Python 3, and Firefox. Run `npm ci`, `npx playwright install chromium`, then `npm test` for the complete suite. The Firefox check installs the extension into a temporary browser profile and checks its real settings API. Selenium downloads geckodriver if needed.
+
+The Stuki integration test downloads the public editor bundle into a temporary folder; set `STUKI_BUNDLE_PATH` to reuse a local copy. All editor API requests in that test are intercepted with synthetic data.

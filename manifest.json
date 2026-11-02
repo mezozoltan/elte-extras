@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ELTE Extras",
-  "version": "1.10.4",
+  "version": "1.11.0",
+  "minimum_chrome_version": "148",
   "description": "Quality of life changes to sites used by ELTE IK students.",
   "permissions": [
     "storage"

@@ -12,6 +12,7 @@
   `;
   document.head.append(style);
   const hints=new Map();
+  const comparisons=new WeakMap();
   let queued=false;
   function output(pre) {
     const column=pre.parentElement;
@@ -51,7 +52,13 @@
         for (const expected of items.filter(item=>item.kind==='expected')) {
           const matches=items.filter(item=>item.kind==='actual' && item.file===expected.file);
           if (matches.length!==1) continue;
-          const result=analyzer.analyze(expected.pre.textContent,matches[0].pre.textContent);
+          const actual=matches[0].pre, expectedText=expected.pre.textContent, actualText=actual.textContent;
+          let comparison=comparisons.get(expected.pre);
+          if (!comparison || comparison.actual!==actual || comparison.expectedText!==expectedText || comparison.actualText!==actualText) {
+            comparison={actual,expectedText,actualText,result:analyzer.analyze(expectedText,actualText)};
+            comparisons.set(expected.pre,comparison);
+          }
+          const result=comparison.result;
           if (result) messages.push({file:expected.file,result});
         }
         if (!messages.length) continue;
@@ -72,10 +79,21 @@
     }
     for (const [grid,entry] of hints) if (!active.has(grid) || !grid.isConnected) { entry.node.remove(); hints.delete(grid); }
   }
-  const observer=new MutationObserver(changes=>{
-    if (changes.every(change=>(change.target.nodeType===Node.ELEMENT_NODE?change.target:change.target.parentElement)?.closest('.progenv-output-hints'))) return;
+  function schedule() {
     if (!queued) { queued=true; requestAnimationFrame(()=>{queued=false;scan();}); }
+  }
+  const panelSelector='[role="tabpanel"][id$="-content-tests"]';
+  const observer=new MutationObserver(changes=>{
+    const relevant=changes.some(change=>{
+      const target=change.target.nodeType===Node.ELEMENT_NODE?change.target:change.target.parentElement;
+      if (target?.closest('.progenv-output-hints')) return false;
+      const nodes=[...change.addedNodes,...change.removedNodes];
+      if (nodes.length && nodes.every(node=>node.nodeType===Node.ELEMENT_NODE && node.matches('.progenv-output-hints'))) return false;
+      return target?.closest(panelSelector) || nodes.some(node=>node.nodeType===Node.ELEMENT_NODE && (node.matches(panelSelector) || node.querySelector(panelSelector)));
+    });
+    if (relevant) schedule();
   });
   observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+  window.addEventListener('progenv-route-change',schedule);
   scan();
 })();
