@@ -11,6 +11,16 @@
               "strict_min_version": "128.0"
             }
           }
+        },
+        {
+          "version": "1.11.0",
+          "update_link": "https://github.com/mezozoltan/elte-extras/releases/download/v1.11.0/elte-extras-1.11.0.xpi",
+          "update_hash": "sha256:92f2495d042ba6e3f2d7e81c5a8828a7ffe57444fe76a0770f9f15a55d599d7c",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "128.0"
+            }
+          }
         }
       ]
     }
