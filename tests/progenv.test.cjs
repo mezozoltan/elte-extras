@@ -151,6 +151,11 @@ const css = process.env.PROGENV_CSS_PATH ? fs.readFileSync(process.env.PROGENV_C
     mode = 'groups'; await load();
     await page.waitForFunction(() => document.querySelectorAll('.progenv-quick-courses details').length === 2);
     assert.equal(await page.locator('.progenv-group-number').last().innerText(),'21. csoport');
+    const groupRows=page.locator('.progenv-quick-courses details');
+    const firstGroupOrder=await groupRows.first().locator('.progenv-topic-name').allTextContents();
+    await groupRows.first().locator('.progenv-topic-row').first().dragTo(groupRows.last().locator('.progenv-topic-row').first());
+    assert.deepEqual(await groupRows.first().locator('.progenv-topic-name').allTextContents(),firstGroupOrder);
+    assert.equal(await page.evaluate(()=>testSettings.progenvTopicOrder),undefined);
     mode = 'error'; await load();
     await page.getByRole('button',{name:'Újrapróbálás'}).waitFor();
     mode = 'normal'; await page.getByRole('button',{name:'Újrapróbálás'}).click();

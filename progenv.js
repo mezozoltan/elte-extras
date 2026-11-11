@@ -1,6 +1,6 @@
 (async () => {
   "use strict";
-  const settings = await browser.storage.local.get(['siteEnabled','progenvCollapsed','progenvHiddenTopics']).catch(() => ({}));
+  const settings = await browser.storage.local.get(['siteEnabled','progenvCollapsed','progenvHiddenTopics','progenvTopicOrder','progenvTopicTasks']).catch(() => ({}));
   const {siteEnabled = {}} = settings;
   if (siteEnabled.progenv === false) return;
   if (document.getElementById('progenv-quick-style')) return;
@@ -9,10 +9,11 @@
   const locale = () => location.pathname.split('/')[1] === 'en' ? 'en' : 'hu';
   const translate = (hu,en) => locale() === 'hu' ? hu : en;
   const roots = new Map();
-  const showTasks = topic => Number.isFinite(topic.expiresAt);
+  const showTasks = (topic, preferences=taskVisibility) => typeof preferences[keyOf(topic.url)]==='boolean' ? preferences[keyOf(topic.url)] : Number.isFinite(topic.expiresAt);
   const preferenceMap = value => value && typeof value==='object' && !Array.isArray(value) ? value : {};
   let records = [], loading = false, loaded = false, lastAttempt = 0, pageURL = location.href;
   let controller = null, collapsed = preferenceMap(settings.progenvCollapsed), hiddenTopics = preferenceMap(settings.progenvHiddenTopics), errorText = "", generation = 0, pendingHide = null;
+  let topicOrder=preferenceMap(settings.progenvTopicOrder), taskVisibility=preferenceMap(settings.progenvTopicTasks), preferenceError='';
   let pageLocale = locale();
   const style = document.createElement('style');
   style.id = 'progenv-quick-style';
@@ -29,6 +30,16 @@
     .progenv-course-name { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .progenv-group-number { flex:0 1 auto; max-width:55%; text-align:right; overflow-wrap:anywhere; font-size:11px; font-weight:500; color:var(--muted-foreground,#888); }
     .progenv-topic-list { margin:2px 0 0; padding:0; border:0; list-style:none; }
+    .progenv-topic-list > li[data-topic-key] { position:relative; }
+    .progenv-topic-list > li[data-drop]::after { content:''; position:absolute; left:0; right:0; height:2px; background:var(--sidebar-ring,#94a3b8); pointer-events:none; }
+    .progenv-topic-list > li[data-drop="before"]::after { top:0; }
+    .progenv-topic-list > li[data-drop="after"]::after { bottom:0; }
+    .progenv-topic-row[draggable="true"] { cursor:grab; }
+    .progenv-topic-list > li[data-dragging] { opacity:.45; }
+    #progenv-topic-menu { position:fixed; z-index:2147483647; min-width:180px; max-width:calc(100vw - 8px); padding:4px; border:1px solid var(--border,#8886); border-radius:7px; background:var(--popover,#171717); color:var(--popover-foreground,#eee); box-shadow:0 4px 16px #0005; font:13px/1.4 system-ui,sans-serif; }
+    #progenv-topic-menu[hidden] { display:none!important; }
+    #progenv-topic-menu button { display:block; width:100%; padding:7px 10px; border:0; border-radius:4px; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
+    #progenv-topic-menu button:hover,#progenv-topic-menu button:focus-visible { background:var(--accent,#8883); outline:none; }
     .progenv-topic-row { display:flex; align-items:center; gap:6px; border-radius:5px; margin:1px 0; padding-right:5px; }
     .progenv-topic-row:hover,.progenv-topic-row:has([aria-current="page"]) { background:var(--sidebar-accent,#8882); }
     .progenv-quick-courses .progenv-topic { display:flex; flex:1; min-width:0; align-items:center; border-radius:5px; padding:6px 5px; text-decoration:none; color:inherit; }
@@ -82,6 +93,12 @@
   const keyOf = url => new URL(url,origin).pathname.replace(/^\/(?:hu|en)(?=\/)/,'').replace(/\/$/,'');
   const localized = url => { const target = new URL(url,origin); target.pathname = '/'+locale()+keyOf(url); return target.href; };
   const isHidden = topic => hiddenTopics[keyOf(topic.url)] === true;
+  function orderedTopics(record) {
+    const topics=model.sortTopics(record.topics);
+    const saved=Array.isArray(topicOrder[record.key]) ? topicOrder[record.key] : [];
+    const ranks=new Map(saved.map((key,index)=>[key,index]));
+    return topics.sort((a,b)=>(ranks.get(keyOf(a.url)) ?? Infinity)-(ranks.get(keyOf(b.url)) ?? Infinity));
+  }
   const keyed = (tag, cls, key, text) => { const node=element(tag,cls,text); node.dataset.key=key; return node; };
   // Reuse keyed nodes, including focused links/buttons, when data arrives or is refreshed.
   function reconcile(parent, desired) {
@@ -116,11 +133,14 @@
       summary.append(element('span','progenv-course-name',record.courseName),element('span','progenv-group-number',record.label));
       details.append(summary);
       const list = element('ul','progenv-topic-list');
-      for (const topic of model.sortTopics(record.topics).filter(topic=>!isHidden(topic))) {
+      for (const topic of orderedTopics(record).filter(topic=>!isHidden(topic))) {
         const topicKey = keyOf(topic.url);
         const item = keyed('li','',topicKey);
+        item.dataset.topicKey=topicKey;
         const row = element('div','progenv-topic-row');
+        row.draggable=true;
         const anchor = keyed('a','progenv-topic','topic'); anchor.href = localized(topic.url);
+        anchor.draggable=false;
         if (keyOf(location.href) === topicKey) anchor.setAttribute('aria-current','page');
         anchor.title = [topic.name,topic.count,topic.deadline].filter(Boolean).join(' · ');
         const line = element('span','progenv-topic-line');
@@ -178,12 +198,139 @@
     } else if (loading && !loaded) status.textContent = translate('Kurzusok betöltése…','Loading courses…');
     else if (loaded && !records.length) status.textContent = translate('Nincs elérhető kurzus.','No available courses.');
     desired.append(status); reconcile(root,desired);
+    if (preferenceError) {
+      const alert=element('div','progenv-quick-status progenv-preference-error',preferenceError); alert.setAttribute('role','alert'); root.append(alert);
+    }
     if (focused?.isConnected && focused.getClientRects().length && document.activeElement!==focused) focused.focus({preventScroll:true});
   }
   function redraw() { for (const root of roots.values()) draw(root); }
+  let preferenceWrites=Promise.resolve();
+  function writeTopicPreference(name,key,value) {
+    const write=preferenceWrites.catch(()=>{}).then(async()=>{
+      const stored=await browser.storage.local.get(name);
+      const next={...preferenceMap(stored[name])}; next[key]=value;
+      await browser.storage.local.set({[name]:next});
+      return next;
+    });
+    preferenceWrites=write; return write;
+  }
+  async function moveTopic(recordKey,source,target,before) {
+    const record=records.find(record=>record.key===recordKey);
+    if (!record || source===target) return;
+    const keys=orderedTopics(record).map(topic=>keyOf(topic.url));
+    if (!keys.includes(source) || !keys.includes(target)) return;
+    keys.splice(keys.indexOf(source),1);
+    keys.splice(keys.indexOf(target)+(before?0:1),0,source);
+    try {
+      topicOrder=await writeTopicPreference('progenvTopicOrder',recordKey,keys);
+      preferenceError='';
+    } catch { preferenceError=translate('Nem sikerült menteni a sorrendet. Próbáld újra.','Could not save the topic order. Try again.'); }
+    redraw();
+  }
+  let draggingTopic=null;
+  function endTopicDrag() {
+    draggingTopic=null;
+    for (const root of roots.values()) for (const node of root.querySelectorAll('[data-drop],[data-dragging]')) {
+      delete node.dataset.drop; delete node.dataset.dragging;
+    }
+  }
+  const topicMenu=element('div','progenv-owned'); topicMenu.id='progenv-topic-menu'; topicMenu.hidden=true; topicMenu.setAttribute('role','menu');
+  const taskToggle=element('button'); taskToggle.type='button'; taskToggle.setAttribute('role','menuitem'); topicMenu.append(taskToggle); document.body.append(topicMenu);
+  let menuTopic=null;
+  function closeTopicMenu(restoreFocus=false) {
+    const previous=menuTopic; menuTopic=null; topicMenu.hidden=true;
+    if (restoreFocus && previous?.anchor.isConnected) previous.anchor.focus({preventScroll:true});
+  }
+  function openTopicMenu(row,x,y) {
+    const key=row.parentElement.dataset.topicKey, topic=matchingTopics(key)[0];
+    if (!topic) return;
+    menuTopic={key,anchor:row.querySelector('.progenv-topic')};
+    taskToggle.textContent=showTasks(topic) ? translate('Feladatok elrejtése','Hide tasks') : translate('Feladatok megjelenítése','Show tasks');
+    taskToggle.disabled=false;
+    topicMenu.hidden=false;
+    const box=topicMenu.getBoundingClientRect();
+    topicMenu.style.left=Math.max(4,Math.min(x,innerWidth-box.width-4))+'px';
+    topicMenu.style.top=Math.max(4,Math.min(y,innerHeight-box.height-4))+'px';
+    taskToggle.focus();
+  }
+  taskToggle.addEventListener('click',async()=>{
+    if (!menuTopic) return;
+    const {key}=menuTopic, topic=matchingTopics(key)[0];
+    if (!topic) {closeTopicMenu(true);return;}
+    const visible=!showTasks(topic);
+    closeTopicMenu(true);
+    try {
+      taskVisibility=await writeTopicPreference('progenvTopicTasks',key,visible);
+      preferenceError=''; redraw();
+      if (visible && (!Array.isArray(topic.tasks) || topic.tasksError)) await retryTasks(key);
+    } catch {
+      preferenceError=translate('Nem sikerült menteni a feladatlista beállítását. Próbáld újra.','Could not save task visibility. Try again.'); redraw();
+    }
+  });
+  topicMenu.addEventListener('keydown',event=>{
+    if (event.key==='Escape') {event.preventDefault();event.stopPropagation();closeTopicMenu(true);}
+    else if (event.key==='Tab') closeTopicMenu(true);
+    else if (['ArrowUp','ArrowDown','Home','End'].includes(event.key)) {event.preventDefault();taskToggle.focus();}
+  });
+  document.addEventListener('pointerdown',event=>{if(!topicMenu.contains(event.target)) closeTopicMenu();},true);
+  window.addEventListener('resize',()=>closeTopicMenu());
+  window.addEventListener('scroll',()=>closeTopicMenu(),true);
+  window.addEventListener('blur',()=>{closeTopicMenu();endTopicDrag();});
+  function addTopicControls(root) {
+    root.addEventListener('contextmenu',event=>{
+      const row=event.target.closest('.progenv-topic-row');
+      if (!row) return;
+      event.preventDefault();event.stopPropagation();
+      const box=row.getBoundingClientRect();
+      openTopicMenu(row,event.clientX || box.left,event.clientY || box.bottom);
+    });
+    root.addEventListener('keydown',event=>{
+      const row=event.target.closest('.progenv-topic-row');
+      if (!row) return;
+      if (event.key==='ContextMenu' || event.shiftKey && event.key==='F10') {
+        event.preventDefault();const box=row.getBoundingClientRect();openTopicMenu(row,box.left,box.bottom);
+      } else if (event.altKey && ['ArrowUp','ArrowDown'].includes(event.key)) {
+        const recordKey=row.closest('details').dataset.recordKey, record=records.find(record=>record.key===recordKey);
+        if (!record) return;
+        event.preventDefault();
+        const keys=orderedTopics(record).filter(topic=>!isHidden(topic)).map(topic=>keyOf(topic.url));
+        const source=row.parentElement.dataset.topicKey, target=keys[keys.indexOf(source)+(event.key==='ArrowUp'?-1:1)];
+        if (target) moveTopic(recordKey,source,target,event.key==='ArrowUp');
+      }
+    });
+    root.addEventListener('dragstart',event=>{
+      const row=event.target.closest('.progenv-topic-row');
+      if (!row) return;
+      if (event.target.closest('button')) {event.preventDefault();return;}
+      closeTopicMenu();
+      draggingTopic={recordKey:row.closest('details').dataset.recordKey,key:row.parentElement.dataset.topicKey};
+      event.dataTransfer.effectAllowed='move'; event.dataTransfer.setData('application/x-elte-extras-topic',draggingTopic.key);
+      row.parentElement.dataset.dragging='true';
+    });
+    root.addEventListener('dragover',event=>{
+      const item=event.target.closest('li[data-topic-key]');
+      for (const node of root.querySelectorAll('[data-drop]')) delete node.dataset.drop;
+      if (!draggingTopic || !item || item.closest('details').dataset.recordKey!==draggingTopic.recordKey || item.dataset.topicKey===draggingTopic.key) return;
+      event.preventDefault();event.dataTransfer.dropEffect='move';
+      const box=item.querySelector('.progenv-topic-row').getBoundingClientRect();
+      item.dataset.drop=event.clientY<box.top+box.height/2?'before':'after';
+    });
+    root.addEventListener('drop',event=>{
+      if (!draggingTopic) return;
+      event.preventDefault();event.stopPropagation();
+      const item=event.target.closest('li[data-topic-key]'), source=draggingTopic;
+      if (item?.dataset.drop && item.closest('details').dataset.recordKey===source.recordKey) moveTopic(source.recordKey,source.key,item.dataset.topicKey,item.dataset.drop==='before');
+      endTopicDrag();
+    });
+    root.addEventListener('dragend',endTopicDrag);
+    root.addEventListener('dragleave',event=>{
+      if (!root.contains(event.relatedTarget)) for (const node of root.querySelectorAll('[data-drop]')) delete node.dataset.drop;
+    });
+  }
   function mount() {
     for (const [area,root] of roots) if (!area.isConnected) { root.remove(); roots.delete(area); }
     if (isLoggedOut()) {
+      closeTopicMenu(); endTopicDrag();
       ++generation; controller?.abort(); loading = false; records = []; loaded = false;
       for (const root of roots.values()) root.remove(); roots.clear();
       return;
@@ -209,6 +356,7 @@
           if (button.classList.contains('progenv-refresh')) refresh();
           if (button.classList.contains('progenv-task-retry')) retryTasks(button.dataset.topicKey);
         });
+        addTopicControls(root);
         roots.set(area,root); draw(root);
       }
       const navigation = link.closest('[data-sidebar="menu"]') || link.closest('ul');
@@ -419,6 +567,7 @@
   observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-sidebar','href']}); mount();
   setInterval(() => {
       if (location.href !== pageURL) {
+        closeTopicMenu(); endTopicDrag();
         pageURL=location.href;
         if (locale()!==pageLocale) {
           pageLocale=locale(); ++generation; controller?.abort(); loading=false; loaded=false; lastAttempt=0;
@@ -432,5 +581,11 @@
     if (area!=='local') return;
     if (changes.progenvHiddenTopics) { hiddenTopics=changes.progenvHiddenTopics.newValue || {}; redraw(); mountRestoreButtons(); }
     if (changes.progenvCollapsed) { collapsed=changes.progenvCollapsed.newValue || {}; redraw(); }
+    if (changes.progenvTopicOrder) { topicOrder=preferenceMap(changes.progenvTopicOrder.newValue); redraw(); }
+    if (changes.progenvTopicTasks) {
+      const previous=taskVisibility; taskVisibility=preferenceMap(changes.progenvTopicTasks.newValue); redraw();
+      const topics=new Map(records.flatMap(record=>record.topics).map(topic=>[keyOf(topic.url),topic]));
+      for (const [key,topic] of topics) if (showTasks(topic) && !showTasks(topic,previous) && !Array.isArray(topic.tasks)) retryTasks(key);
+    }
   });
 })();

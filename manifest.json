@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ELTE Extras",
-  "version": "1.11.0",
+  "version": "1.13.0",
   "minimum_chrome_version": "148",
   "description": "Quality of life changes to sites used by ELTE IK students.",
   "permissions": [
@@ -9,9 +9,15 @@
   ],
   "host_permissions": [
     "https://webprogramozas.inf.elte.hu/*",
-    "https://progenv.inf.elte.hu/*"
+    "https://progenv.inf.elte.hu/*",
+    "https://klettner.web.elte.hu/*"
   ],
   "content_scripts": [
+    {
+      "matches": ["https://klettner.web.elte.hu/*"],
+      "js": ["klettner-login.js"],
+      "run_at": "document_idle"
+    },
     {
       "matches": [
         "https://progalap.elte.hu/stuki",

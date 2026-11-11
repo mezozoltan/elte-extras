@@ -15,6 +15,7 @@ You can disable the changes made to the sites separately in the extension’s to
 - Progenv sidebar dropdowns show each course and group, with direct topic links, task counts, scores, and deadlines.
 - Hints on failed Progenv tests when output differs only in characters invisible by just looking.
 - Draggable divider between the specification editor's Specification and Data columns.
+- A red **Log in** button or **Logged in** status on [Klettner course pages](https://klettner.web.elte.hu/?p=722) that link to the protected login file.
 
 ## Install in Firefox
 
@@ -63,6 +64,8 @@ Individual task links appear only beneath topics with a deadline or closing date
 
 Hover over a sidebar topic to turn its percentage badge into an **×** button. Confirm to hide that topic and its task links. Hidden topics have a **Show in sidebar** button on their course/group card and topic page. These choices are saved locally and also apply after switching languages.
 
+Drag topics to reorder them within their course/group. With a topic focused, **Alt+↑ / Alt+↓** also moves it. Right-click a topic (or press **Shift+F10**) to show or hide its task links, including topics without a deadline. Topic order and task visibility are saved across reloads and language changes; topics without a custom order keep the deadline-based order.
+
 ## Progenv output-difference hints
 
 ![Output hint example using synthetic test data](docs/output-hint-preview.png)
@@ -73,12 +76,16 @@ This feature reads only test results already rendered in the page. It makes no n
 
 ## API and privacy
 
-The extension runs on `https://progalap.elte.hu/stuki`, `https://progalap.elte.hu/specifikacio`, and their child paths, plus `https://progenv.inf.elte.hu/*`. Stuki history reads:
+The extension runs on the Structogram and Specification editors, Progenv, and supported Klettner course pages. Stuki history reads:
 
 - `GET https://webprogramozas.inf.elte.hu:3000/me` using the existing session.
 - `GET https://webprogramozas.inf.elte.hu:3001/structograms` using the returned access token.
 
 Progenv reads the signed-in `/{locale}/courses` page and the course/group URLs linked from it. It uses the browser’s existing same-origin cookies without reading or persisting them.
+
+On supported pages at `https://klettner.web.elte.hu`, the extension checks the site's small `/Downloads/progptin/login.txt` file using the existing browser session. It retries once if the result is inconclusive, then leaves the navigation control hidden. The **BEJELENTKEZÉS** button opens ELTE's official form in a dialog. To open it in a new tab, Ctrl-click or Cmd-click **BEJELENTKEZÉS**. The extension never reads credentials. If updating Firefox and the new control is missing, allow ELTE Extras on `klettner.web.elte.hu` in Firefox's extensions menu and reload the page.
+
+Open a protected slide deck to use the slide viewer. Use the left and right arrows to move between slides, or type a page number to jump to it. The viewer preloads nearby slides.
 
 There is no telemetry, deletion, or account-management functionality. When you explicitly confirm a first save, the extension renames the first function through the editor’s own controls and invokes its existing Save action. The editor then performs its normal authenticated `POST /structograms`; the extension does not construct a separate save request. The list endpoint already exists, the extension just adds a button for it.
 

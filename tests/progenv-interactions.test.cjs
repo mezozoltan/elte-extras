@@ -31,7 +31,7 @@ const confirmation='Biztosan el akarod rejteni ezt a feladatot a ball oldalról?
             return html('<main><div data-slot="card"><a href="/courses/1">IP-18 - Programozás</a></div>'+(window.mode==='course-error'?'<div data-slot="card"><a href="/courses/2">Other course</a></div>':'')+'</main>');
           }
           if(pathname.endsWith('/courses/2')) return new Response('Unavailable',{status:503});
-          if(pathname.endsWith('/courses/1')) return html('<main><h1>20. csoport</h1>'+Array.from({length:5},(_,i)=>`<div data-slot="card"><a href="/courses/1/groups/20/topics/${i+1}">${i+1}. gyakorlat</a><span aria-label="Score 100%"></span><span>2 feladat</span><span>Határidő: 2026. 11. 01.</span></div>`).join('')+'</main>');
+          if(pathname.endsWith('/courses/1')) return html('<main><h1>20. csoport</h1>'+Array.from({length:5},(_,i)=>`<div data-slot="card"><a href="/courses/1/groups/20/topics/${i+1}">${i+1}. gyakorlat</a><span aria-label="Score 100%"></span><span>2 feladat</span>${window.mode==='undated' && i===0?'':'<span>Határidő: 2026. 11. 01.</span>'}</div>`).join('')+'</main>');
           if(pathname.includes('/topics/')) {
             if(window.mode==='task-auth') return new Response('Sign in',{status:401});
             const id=Number(pathname.split('/').at(-1));
@@ -107,7 +107,50 @@ const confirmation='Biztosan el akarod rejteni ezt a feladatot a ball oldalról?
     await page.evaluate(()=>{window.mode='task-auth';});await page.locator('.progenv-task-retry').first().click();
     await page.waitForFunction(()=>document.querySelectorAll('.progenv-topic').length===0);
     assert.match(await page.locator('.progenv-quick-status').innerText(),/Jelentkezz/);
+    await load('undated');await page.waitForFunction(()=>document.querySelectorAll('.progenv-task').length===4);
+    const topicRow=id=>page.locator(`li[data-topic-key="/courses/1/groups/20/topics/${id}"] > .progenv-topic-row`);
+    const menu=page.locator('#progenv-topic-menu');
+    assert.equal(await page.evaluate(()=>calls.some(url=>url.endsWith('/topics/1'))),false);
+    await topicRow(1).click({button:'right'});
+    await page.getByRole('menuitem',{name:'Feladatok megjelenítése',exact:true}).waitFor();
+    await page.keyboard.press('Escape');assert.equal(await menu.isVisible(),false);
+    await topicRow(1).click({button:'right'});
+    await page.getByRole('menuitem',{name:'Feladatok megjelenítése',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelectorAll('.progenv-task').length===5);
+    assert.equal(settings.progenvTopicTasks['/courses/1/groups/20/topics/1'],true);
+    await topicRow(1).click({button:'right'});
+    await page.getByRole('menuitem',{name:'Feladatok elrejtése',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelectorAll('.progenv-task').length===4);
+    await load('undated');await page.waitForFunction(()=>document.querySelectorAll('.progenv-task').length===4);
+    // A failed save leaves the selected task visibility unchanged.
+    failStorage=true;await topicRow(1).click({button:'right'});
+    await page.getByRole('menuitem',{name:'Feladatok megjelenítése',exact:true}).click();
+    await page.locator('.progenv-preference-error').waitFor();assert.equal(await page.locator('.progenv-task').count(),4);
+    failStorage=false;
+    await topicRow(1).locator('a').focus();await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem',{name:'Feladatok megjelenítése',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelectorAll('.progenv-task').length===5);
+    assert.equal(await page.locator('.progenv-preference-error').count(),0);
+    // Drag whole topics, retaining their nested tasks and persisted course/group order.
+    const targetBox=await topicRow(3).boundingBox();
+    await topicRow(1).dragTo(topicRow(3),{targetPosition:{x:20,y:targetBox.height-1}});
+    await page.waitForFunction(()=>document.querySelector('.progenv-topic-name').textContent==='2. gyakorlat');
+    assert.deepEqual(await page.locator('.progenv-topic-name').allTextContents(),['2. gyakorlat','3. gyakorlat','1. gyakorlat','4. gyakorlat','5. gyakorlat']);
+    assert.deepEqual(settings.progenvTopicOrder['1/20'].map(key=>Number(key.split('/').at(-1))),[2,3,1,4,5]);
+    assert.equal(await topicRow(1).locator('..').locator('.progenv-task').innerText(),'Task 1');
+    await load('undated','en');await page.waitForFunction(()=>document.querySelectorAll('.progenv-task').length===5);
+    assert.deepEqual(await page.locator('.progenv-topic-name').allTextContents(),['2. gyakorlat','3. gyakorlat','1. gyakorlat','4. gyakorlat','5. gyakorlat']);
+    await topicRow(1).locator('a').focus();await page.keyboard.press('Alt+ArrowUp');
+    await page.waitForFunction(()=>document.querySelectorAll('.progenv-topic-name')[1].textContent==='1. gyakorlat');
+    assert.equal(await topicRow(1).locator('a').evaluate(node=>document.activeElement===node),true);
+    await topicRow(1).click({button:'right'});await page.getByRole('menuitem',{name:'Hide tasks',exact:true}).waitFor();
+    if(process.env.PROGENV_TOPIC_MENU_PREVIEW_PATH) await page.screenshot({path:process.env.PROGENV_TOPIC_MENU_PREVIEW_PATH});
+    await page.mouse.click(600,20);assert.equal(await menu.isVisible(),false);
+    await page.evaluate(()=>storageChanged({progenvTopicOrder:{newValue:{'1/20':['/courses/1/groups/20/topics/5','/courses/1/groups/20/topics/1']}}},'local'));
+    await page.waitForFunction(()=>document.querySelector('.progenv-topic-name').textContent==='5. gyakorlat');
+    await page.evaluate(()=>storageChanged({progenvTopicTasks:{newValue:{'/courses/1/groups/20/topics/1':false}}},'local'));
+    await page.waitForFunction(()=>document.querySelectorAll('.progenv-task').length===4);
     assert.deepEqual(errors,[]);
-    console.log('PASS: hover morph, exact confirmation, cancel/Escape, storage rollback, persistent hiding, card/page restoration, focused node reuse, partial failures, per-request timeout/retry, locale refresh, cross-tab changes');
+    console.log('PASS: hide/restore controls, dialog dismissal, storage rollback, focused node reuse, partial failures, timeout/retry, locale refresh, native drag reorder, keyboard reorder, context-menu task visibility including undated topics, persistence and cross-tab changes');
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
